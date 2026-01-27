@@ -1,35 +1,68 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Entypo from '@expo/vector-icons/Entypo';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Tabs } from "expo-router";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabsLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
+    <Tabs screenOptions={{ tabBarActiveTintColor: "teal" }}>
+      
+      <Tabs.Screen 
+      name="index" 
+      options={{ 
+        title: "Home",
+        tabBarIcon: ({color}) => ( 
+        <FontAwesome5 name="home" size={24} color={color} />
+      ),
+    }} 
+    />
+      <Tabs.Screen 
+      name="calender" 
+      options={{ 
+        title: "Calender",
+        tabBarIcon: ({color}) =>
+        (<Entypo name="calendar" size={24} color={color} />
+        
+        ),
+
+      
+    
+    }}
+    />
+
+    <Tabs.Screen 
+    name="recipe" 
+    options={{
+      title: "Recipes",
+      tabBarIcon: ({color}) =>
+      (<FontAwesome6 name="bowl-food" size={24} color={color} />
+      ),
+
+
+
+    }}
+  />
+
+  <Tabs.Screen
+  name="profile"
+  options={{
+    title: "Profile",
+    tabBarIcon: ({color}) =>
+    (<Ionicons name="person-sharp" size={24} color={color} />)
+
+
+  }}
+  />
+
+
     </Tabs>
+  
+   
+   
+    
+  
+
   );
+
 }
