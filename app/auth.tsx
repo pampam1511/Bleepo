@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import { Button, Text, TextInput, useTheme } from "react-native-paper";
 
 export default function AuthScreen() {
     const[isSignUp, setIsSignUp] = useState<boolean>(false);
@@ -8,13 +8,27 @@ export default function AuthScreen() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [name, setName] = useState("");
+    const [error,setError] = useState<String | null>("");
+    const theme = useTheme();
 
+    const handleAuth = async () => {
+        if(!email || !password) {
+            setError("Please fill in all fields");
+            return;
+        }
+
+        if (password.length < 6){
+            setError("Passwrod must be at least 8 characters long.");
+            return;
+        }
+
+        setError(null);
+
+    };
     const handleSwitchMode = () => {
         setIsSignUp((prev) => !prev);
 
     };
-
-
 
     return (
     <KeyboardAvoidingView 
@@ -76,6 +90,8 @@ export default function AuthScreen() {
                         contentStyle={styles.inputContainer}
                     />
 
+                    
+
                     {/*Confirm password only for sign up */}
                     {isSignUp && (
                         <TextInput
@@ -101,11 +117,16 @@ export default function AuthScreen() {
                        </Text>
                     )}
 
+                    {error && (
+                    <Text style={{color: theme.colors.error}}>{error}</Text>
+                    )}
+
                     <Button 
                     mode="outlined" 
                     style={styles.button}
-                    labelStyle={styles.button} 
-                    onPress={() => alert(isSignUp ? "Signing up..." : "Signing in...")}> 
+                    labelStyle={styles.button}
+                    //onPress={handleAuth} 
+                    onPress={handleAuth}> 
                     {isSignUp ? "SIGN UP" : "Sign in"}
                     </Button>
 
