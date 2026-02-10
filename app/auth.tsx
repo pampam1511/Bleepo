@@ -86,8 +86,10 @@ export default function AuthScreen() {
                         autoCapitalize="words"
                         mode="flat"
                         left={<TextInput.Icon icon="account" />}
+                        outlineStyle={{ borderRadius: 28, borderWidth: 1, borderColor: "#222" }}
                         underlineColor="transparent"
-                        contentStyle={styles.inputContainer}
+                        style={{ backgroundColor: "transparent"}}
+                        contentStyle={{paddingLeft: 8}}//styles.inputContainer}
                         
 
                     />   
@@ -100,8 +102,10 @@ export default function AuthScreen() {
                         keyboardType="email-address"
                         mode="flat"
                         left={<TextInput.Icon icon="email" />}
+                        outlineStyle={{borderRadius: 28, borderWidth: 1 }}
                         underlineColor="transparent"
-                        contentStyle={styles.inputContainer}
+                        style={{ backgroundColor: "transparent"}}
+                        //contentStyle={styles.inputContainer}
                     />
 
                     <TextInput 
@@ -112,7 +116,8 @@ export default function AuthScreen() {
                         mode="flat"
                         left={<TextInput.Icon icon="lock" />}
                         underlineColor="transparent"
-                        contentStyle={styles.inputContainer}
+                        style={{ backgroundColor: "transparent"}}
+                        //contentStyle={styles.inputContainer}
                     />
 
                     
@@ -127,7 +132,8 @@ export default function AuthScreen() {
                             mode="flat"
                             left={<TextInput.Icon icon="lock-check" />}
                             underlineColor="transparent"
-                            contentStyle={styles.inputContainer}
+                            style={{ backgroundColor: "transparent"}}
+                            //contentStyle={styles.inputContainer}
                       />
                     )}
 
@@ -177,7 +183,7 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#ffffff",
 
     },
     content:{
@@ -196,24 +202,34 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     hello: {
-        fontWeight: "bold",
-        fontSize: 32,
-        marginBottom: 8,
-        color: "#000",
+        fontWeight: "800",
+        fontSize: 40,
+        marginBottom: 70,
+        marginTop: 46,
+        marginLeft: 30,
+        color: "#03160B", //#FFB6C1
+        
     },
     welcome: {
-        fontSize: 20,
-        //marginBottom: 25,
-        color: "#000",
+        fontWeight: "800",
+        fontSize: 30,
+        marginBottom: 130,
+        marginLeft: 30,
+        alignSelf: "flex-start" ,
+        color: "#03160B",
     },
     cardWrapper: {
         flex: 1,
     },
     card: {
         flex: 1,
-        backgroundColor: "#e0e0e0",
+        //flexShrink: 1,
+        backgroundColor: "#BBFCEE", //008080 BBFCEE
         borderRadius: 28,
-        padding: 17,
+        padding: 22,
+        //height: 700,
+        minHeight: 200,
+        //width: 90%
         //elevation: 0,
     },
     cardTitle: {
@@ -224,8 +240,10 @@ const styles = StyleSheet.create({
     },
     inputContainer: {
         backgroundColor: "#d5d5d5",
-        borderRadius: 30,
-        //height: 50,
+        borderRadius: 28,
+        borderWidth: 1,
+        borderColor: "#222",
+        paddingHorizontal: 14,
         marginTop:12,
         marginBottom: 12,
         overflow: "hidden",
@@ -242,6 +260,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: "#000",
         marginBottom: 12,
+        fontWeight: "600",
+
     },
     button:{
         marginTop: 8,
@@ -256,5 +276,9 @@ const styles = StyleSheet.create({
     switchButton:{
         marginTop: 10,  
     }, 
+    switchLabel:{
+        color: "#6f56c8",
+        fontWeight: "600",
+    },
 
 }); 
