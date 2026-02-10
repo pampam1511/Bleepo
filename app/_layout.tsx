@@ -1,7 +1,9 @@
 // app/_layout.tsx
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { HealthProvider } from "@/lib/health-context";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 function RootLayoutC() {
   const router = useRouter();
@@ -31,6 +33,7 @@ function RootLayoutC() {
     <Stack>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(screens)" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -38,7 +41,11 @@ function RootLayoutC() {
 export default function RootLayout() {
   return(
     <AuthProvider>
+      <HealthProvider>
+      <SafeAreaProvider>
       <RootLayoutC />
+      </SafeAreaProvider>
+      </HealthProvider>
     </AuthProvider>
   );
 }
