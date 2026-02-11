@@ -1,34 +1,40 @@
 import { createContext, useContext } from "react";
-import { ID, Query, Permission,Role } from "react-native-appwrite";
-import { databases, account } from "./appwrite";
+import { ID, Query, Permission, Role } from "react-native-appwrite";
+import {
+  databases,
+  account,
+  DATABASE_ID,
+  STEPS_DAILY_COLLECTION_ID,
+} from "./appwrite";
 
 const DB_ID = "697ceba5002b026d89f2";
 const HEALTH_LOGS = "health_logId";
 const PERIOD_LOGS = "menstrualcycles";
 const PCOS_LOGS = "pcos_logsId";
 const CALORIE_GOALS = "calorie_goals";
+const STEPS_GOALS = "steps_goals"; // ✅ NEW collection for steps goal
 
 type HealthContextType = {
   fetchMonthLogs: (date: Date) => Promise<any[]>;
   fetchAllLogs: () => Promise<any[]>;
   getDetailLog: (healthLogId: string, type: "PERIOD" | "PCOS") => Promise<any>;
-  saveHealthLog: (params: {
-    date: string;
-    type: "PERIOD" | "PCOS";
-    payload: any;
-  }) => Promise<void>;
-  getPeriodStats: (logs: any[]) => { avgLength: number | null; nextPeriodDate: Date | null }; 
-  getTodayCalories: () => Promise<any | null>; 
-  saveTodayCalories: (params: {
-    targetCalories: number;
-    dailyCalories: number;
-    goalStatus?: string;
-  }) => Promise<void>
+  saveHealthLog: (params: { date: string; type: "PERIOD" | "PCOS"; payload: any }) => Promise<void>;
+
+  getPeriodStats: (logs: any[]) => { avgLength: number | null; nextPeriodDate: Date | null };
+
+  getTodayCalories: () => Promise<any | null>;
+  saveTodayCalories: (params: { targetCalories: number; dailyCalories: number; goalStatus?: string }) => Promise<void>;
+
+  getStepsDaily: (start: Date, end: Date) => Promise<any[]>;
+  saveStepsDaily: (date: Date, payload: any) => Promise<void>;
+
+  getStepsGoal: () => Promise<any | null>; // ✅ NEW
+  saveStepsGoal: (params: { targetSteps: number; goalStatus?: string }) => Promise<void>; // ✅ NEW
 };
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
-const getPeriodStats = (logs: any[]) => computePeriodStats(logs);
 
+// ✅ stats helpers
 function addDays(d: Date, days: number) {
   const copy = new Date(d);
   copy.setDate(copy.getDate() + days);
@@ -39,7 +45,7 @@ function daysBetween(a: Date, b: Date) {
 }
 function computePeriodStats(logs: any[]) {
   const periodDays = logs
-    .filter((l) => String(l.type).toUpperCase() === "PERIOD") // ✅ tolerant
+    .filter((l) => String(l.type).toUpperCase() === "PERIOD")
     .map((l) => new Date(l.date))
     .sort((a, b) => a.getTime() - b.getTime());
 
@@ -82,7 +88,6 @@ function computePeriodStats(logs: any[]) {
 export function HealthProvider({ children }: { children: React.ReactNode }) {
   const fetchMonthLogs = async (date: Date) => {
     const user = await account.get();
-
     const start = new Date(date.getFullYear(), date.getMonth(), 1);
     const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
 
@@ -95,7 +100,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     return res.documents;
   };
 
-  // ✅ NEW: fetch all logs for stats
   const fetchAllLogs = async () => {
     const user = await account.get();
     const res = await databases.listDocuments(DB_ID, HEALTH_LOGS, [
@@ -108,7 +112,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     const collection = type === "PERIOD" ? PERIOD_LOGS : PCOS_LOGS;
 
     const res = await databases.listDocuments(DB_ID, collection, [
-      Query.equal("health_logId", healthLogId), 
+      Query.equal("health_logId", healthLogId),
     ]);
 
     return res.documents[0] ?? null;
@@ -141,9 +145,9 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         ID.unique(),
         { userId: user.$id, date, type },
         [
-            Permission.read(Role.user(user.$id)),
-            Permission.update(Role.user(user.$id)),
-            Permission.delete(Role.user(user.$id)),
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+          Permission.delete(Role.user(user.$id)),
         ]
       );
       healthLogId = created.$id;
@@ -152,7 +156,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     const collection = type === "PERIOD" ? PERIOD_LOGS : PCOS_LOGS;
 
     const existingDetail = await databases.listDocuments(DB_ID, collection, [
-      Query.equal("health_logId", healthLogId), // ✅ CHANGED
+      Query.equal("health_logId", healthLogId),
     ]);
 
     if (existingDetail.documents.length > 0) {
@@ -160,22 +164,24 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         DB_ID,
         collection,
         existingDetail.documents[0].$id,
-        { health_logId: healthLogId, ...payload } // ✅ CHANGED
+        { health_logId: healthLogId, ...payload }
       );
     } else {
-      await databases.createDocument(DB_ID, collection, ID.unique(), {
-        health_logId: healthLogId, // ✅ CHANGED
-        ...payload,
-      },
-      [
-        Permission.read(Role.user(user.$id)),
-        Permission.update(Role.user(user.$id)),
-        Permission.delete(Role.user(user.$id)),
-
-      ]
+      await databases.createDocument(
+        DB_ID,
+        collection,
+        ID.unique(),
+        { health_logId: healthLogId, ...payload },
+        [
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+          Permission.delete(Role.user(user.$id)),
+        ]
       );
     }
   };
+
+  const getPeriodStats = (logs: any[]) => computePeriodStats(logs);
 
   const getTodayCalories = async () => {
     const user = await account.get();
@@ -203,7 +209,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     goalStatus?: string;
   }) => {
     const user = await account.get();
-
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const end = new Date();
@@ -230,6 +235,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
           userId: user.$id,
           startDate: start.toISOString(),
           endDate: end.toISOString(),
+          
           goalStatus,
           targetCalories,
           dailyCalories,
@@ -243,16 +249,125 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getStepsDaily = async (start: Date, end: Date) => {
+    const user = await account.get();
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      STEPS_DAILY_COLLECTION_ID,
+      [
+        Query.equal("userId", user.$id),
+        Query.greaterThanEqual("date", start.toISOString()),
+        Query.lessThanEqual("date", end.toISOString()),
+      ]
+    );
+    return res.documents;
+  };
 
+  const saveStepsDaily = async (date: Date, payload: any) => {
+    const user = await account.get();
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
 
+    const existing = await databases.listDocuments(
+      DATABASE_ID,
+      STEPS_DAILY_COLLECTION_ID,
+      [
+        Query.equal("userId", user.$id),
+        Query.greaterThanEqual("date", start.toISOString()),
+        Query.lessThanEqual("date", end.toISOString()),
+      ]
+    );
 
+    if (existing.documents.length > 0) {
+      await databases.updateDocument(
+        DATABASE_ID,
+        STEPS_DAILY_COLLECTION_ID,
+        existing.documents[0].$id,
+        { userId: user.$id, date: date.toISOString(), ...payload }
+      );
+    } else {
+      await databases.createDocument(
+        DATABASE_ID,
+        STEPS_DAILY_COLLECTION_ID,
+        ID.unique(),
+        { userId: user.$id, date: date.toISOString(), ...payload },
+        [
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+          Permission.delete(Role.user(user.$id)),
+        ]
+      );
+    }
+  };
 
+  // ✅ NEW: get steps goal
+  const getStepsGoal = async () => {
+    const user = await account.get();
+    const res = await databases.listDocuments(DB_ID, STEPS_GOALS, [
+      Query.equal("userId", user.$id),
+      Query.equal("goalStatus", "active"),
+    ]);
+    return res.documents[0] ?? null;
+  };
 
+  // ✅ NEW: save steps goal
+  const saveStepsGoal = async ({
+    targetSteps,
+    goalStatus = "active",
+  }: {
+    targetSteps: number;
+    goalStatus?: string;
+  }) => {
+    const user = await account.get();
 
+    const existing = await databases.listDocuments(DB_ID, STEPS_GOALS, [
+      Query.equal("userId", user.$id),
+      Query.equal("goalStatus", "active"),
+    ]);
+
+    if (existing.documents.length > 0) {
+      await databases.updateDocument(DB_ID, STEPS_GOALS, existing.documents[0].$id, {
+        targetSteps,
+        goalStatus,
+      });
+    } else {
+      await databases.createDocument(
+        DB_ID,
+        STEPS_GOALS,
+        ID.unique(),
+        {
+          userId: user.$id,
+          targetSteps,
+          goalStatus,
+          startDate: new Date().toISOString(),
+          endDate: new Date().toISOString(),
+        },
+        [
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+          Permission.delete(Role.user(user.$id)),
+        ]
+      );
+    }
+  };
 
   return (
     <HealthContext.Provider
-      value={{ fetchMonthLogs, fetchAllLogs, getDetailLog, saveHealthLog, getPeriodStats, getTodayCalories, saveTodayCalories }} // ✅ UPDATED
+      value={{
+        fetchMonthLogs,
+        fetchAllLogs,
+        getDetailLog,
+        saveHealthLog,
+        getPeriodStats,
+        getTodayCalories,
+        saveTodayCalories,
+        getStepsDaily,
+        saveStepsDaily,
+        getStepsGoal, // ✅
+        saveStepsGoal, // ✅
+      }}
     >
       {children}
     </HealthContext.Provider>

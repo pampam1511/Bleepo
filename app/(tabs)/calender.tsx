@@ -7,7 +7,10 @@ import { useHealth } from "@/lib/health-context";
 const WEEK_DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const MOOD_OPTIONS = ["😢", "😕", "😐", "🙂", "😄"];
 const PAIN_LEVELS = [1, 2, 3, 4, 5];
-const BLEEDING_OPTIONS = ["NONE", "SPOTTING", "LIGHT", "HEAVY"] as const;
+const BLEEDING_OPTIONS = ["none", "spotting", "light", "medium", "heavy"] as const; // ✅ matches DB
+const ACNE_LEVELS = ["mild", "moderate", "severe"] as const;
+
+
 
 function buildMonth(year: number, month: number) {
   const firstDay = new Date(year, month, 1).getDay();
@@ -37,7 +40,7 @@ export default function CalendarScreen() {
   const [moods, setMoods] = useState<string[]>([]);
   const [painLevel, setPainLevel] = useState(3);
   const [bleeding, setBleeding] =
-    useState<"NONE" | "SPOTTING" | "LIGHT" | "HEAVY">("NONE");
+    useState<"none" | "spotting" | "light" | "medium" | "heavy">("none");
 
   const [padChanges, setPadChanges] = useState(0);
   const [notes, setNotes] = useState("");
@@ -51,6 +54,10 @@ export default function CalendarScreen() {
   const [periodEnd, setPeriodEnd] = useState<Date | null>(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+
+  const [acne_levels, setAcneLevel] = useState<"none" | "mild" | "moderate" | "severe">("mild");
+  const [fatigue, setFatigue] = useState(3);
+  const [increasedAppetite, setIncreasedAppetite] = useState(3);
 
   const monthLabel = date.toLocaleString("en-US", {
     month: "long",
@@ -108,7 +115,7 @@ export default function CalendarScreen() {
       setMoods(detail.moods ?? []);
 
       if (activeMode === "PERIOD") {
-        setBleeding(detail.flowIntensity ?? "NONE");
+        setBleeding(detail.flowIntensity ?? "none");
         setPadChanges(detail.padChanges ?? 0);
         setNotes(detail.notes ?? "");
         setPhotos(detail.photoIds ?? []);
@@ -120,6 +127,10 @@ export default function CalendarScreen() {
         setBloating(detail.bloating ?? 3);
         setFacialHair(detail.facialhair ? "YES" : "NO");
         setStressLevel(detail.stressLevel ?? 3);
+        setMoods(detail.moods ?? []);
+        setAcneLevel(detail.acne_levels ?? "mild");
+        setFatigue(detail.fatigue ?? 3);
+        setIncreasedAppetite(detail.increased_appetite ?? 3);
       }
     };
 
@@ -128,6 +139,16 @@ export default function CalendarScreen() {
 
   const handleSave = async () => {
     if (!selectedDateLocal || !activeMode) return;
+
+    let safeStart = periodStart;
+    let safeEnd = periodEnd;
+    if (activeMode === "PERIOD") {
+      if(!safeStart && selectedDay !== null) {
+        safeStart = new Date(date.getFullYear(), date.getMonth(), selectedDay);
+      } if (!safeEnd && selectedDay) {
+        safeEnd = safeStart;
+      }
+    }
 
     await saveHealthLog({
       date: selectedDateLocal,
@@ -141,8 +162,8 @@ export default function CalendarScreen() {
               padChanges,
               notes,
               photoIds: photos,
-              startDate: periodStart ? periodStart.toISOString() : null,
-              endDate: periodEnd ? periodEnd.toISOString() : null,
+              startDate: safeStart ? safeStart.toISOString() : null,
+              endDate: safeEnd ? safeEnd.toISOString() : null,
             }
           : {
               painLevel,
@@ -150,6 +171,9 @@ export default function CalendarScreen() {
               bloating,
               facialhair: facialHair === "YES",
               stressLevel,
+              acne_levels: acne_levels,
+              fatigue,
+              increased_appetite: increasedAppetite,
             },
     });
 
@@ -214,6 +238,7 @@ export default function CalendarScreen() {
               disabled={!d}
               onPress={() => {
                 if (!d) return;
+                console.log("pressed", d);
                 setSelectedDay(d);
                 setActiveMode(null);
               }}
@@ -305,6 +330,24 @@ export default function CalendarScreen() {
                   }}
                 />
               )}
+
+              <Text style={styles.label}>Flow Intensity</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6 }}>
+              
+                {BLEEDING_OPTIONS.map((b) => (
+                  <TouchableOpacity
+                    key={b}
+                    style={[
+                      styles.bleedingPill,
+                      bleeding === b && styles.bleedingSelected,
+                    ]}
+                    onPress={() => setBleeding(b)
+                    }
+                  >
+                    <Text>{b}</Text>
+                  </TouchableOpacity>
+                ))}
+                </ScrollView>
 
               <Text style={styles.label}>Pain Level</Text>
               <View style={styles.sliderRow}>
@@ -419,6 +462,52 @@ export default function CalendarScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
+
+              <Text style={styles.label}>Acne Level</Text>
+              <View style={styles.bleedingRow}>
+                {ACNE_LEVELS.map((lvl) => (
+                  <TouchableOpacity
+                    key={lvl}
+                    style={[
+                      styles.bleedingPill,
+                      acne_levels === lvl && styles.bleedingSelected,
+                    ]}
+                    onPress={() => setAcneLevel(lvl)}
+                  >
+                    <Text>{lvl}</Text>
+                  </TouchableOpacity>
+                ))}
+
+              </View>
+
+              <Text style={styles.label}>Fatigue</Text>
+              <View style={styles.sliderRow}>
+                {[1,2,3,4,5].map((n) => (
+                  <TouchableOpacity
+                    key={n}
+                    style={[
+                      styles.sliderDot,
+                      fatigue >= n && styles.sliderActive,
+                    ]}
+                    onPress={() => setFatigue(n)}
+                  />
+                ))}
+              </View>
+
+              <Text style={styles.label}>Increased Appetite</Text>
+              <View style={styles.sliderRow}>
+                {[1,2,3,4,5].map((n) => (
+                  <TouchableOpacity
+                    key={n}
+                    style={[
+                      styles.sliderDot,
+                      increasedAppetite >= n && styles.sliderActive,
+                    ]}
+                    onPress={() => setIncreasedAppetite(n)}
+                  />
+                ))}
+              </View>
+
 
               <Text style={styles.label}>Bloating</Text>
               <View style={styles.sliderRow}>
