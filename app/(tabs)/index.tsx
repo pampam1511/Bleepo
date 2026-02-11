@@ -57,7 +57,7 @@ export default function Index() {
           
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/")} style={styles.statCard}>
+        <TouchableOpacity onPress={() => router.push("/(screens)/steps")} style={styles.statCard}>
           <Text style={styles.statTitle}>STEPS</Text>
          
         </TouchableOpacity>
@@ -65,7 +65,7 @@ export default function Index() {
 
       {/* Leaderboard */}
       <View style={styles.leaderCard}>
-        <TouchableOpacity  onPress={() => router.push("/screens /leaderboard")}>
+        <TouchableOpacity  onPress={() => router.push("/(screens)/leaderboard")}>
         <Text style={styles.leaderTitle}>LEADER BOARD</Text>
         <View style={styles.leaderRow}>
           <View style={styles.leaderBox} />
