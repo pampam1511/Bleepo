@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { account } from "@/lib/appwrite";
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useHealth } from "@/lib/health-context";
+import { useProfile } from "@/lib/profile-context";
 
 export default function Index() {
   const router = useRouter();
+  const { getUserProfile } = useProfile();
 
   const { getStepsDaily, getStepsGoal, getTodayCalories } = useHealth();
 
@@ -14,6 +16,8 @@ export default function Index() {
   const [stepsGoal, setStepsGoal] = useState(0);
 
   const [calories, setCalories] = useState({ intake: 0, goal: 0 });
+  const [weight, setWeight] = useState(0);
+  const [weightGoal, setWeightGoal] = useState(0);
 
   useEffect(() => {
     const loadToday = async () => {
@@ -52,6 +56,17 @@ export default function Index() {
     loadUser();
   }, []);
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      const doc = await getUserProfile();
+      if (doc) {
+        setWeight(doc.weightKg ?? 0);
+        setWeightGoal(doc.weightGoalKg ?? 0);
+      }
+    };
+    loadProfile();
+  }, []);
+
   return (
     <View style={styles.screen}>
       
@@ -68,6 +83,7 @@ export default function Index() {
         <Text style={styles.summaryText}>Steps:</Text>
         <Text style={styles.summaryText}>Mood:</Text>
         <Text style={styles.summaryText}>Calories:</Text>
+        <Text style={styles.summaryText}>Weight: {weight}kg / Goal: {weightGoal}kg</Text>
       </View>
 
       {/* Calories + Steps */}
