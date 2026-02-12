@@ -8,7 +8,15 @@ const SCREEN_W = Dimensions.get("window").width;
 
 export default function StepsScreen() {
   const router = useRouter();
-  const { getStepsDaily, getStepsGoal, saveStepsGoal, saveStepsDaily } = useHealth();
+  const { 
+    getStepsDaily, 
+    getStepsGoal, 
+    saveStepsGoal, 
+    saveStepsDaily, 
+    getTodayCalories, 
+    saveTodayCalories } = useHealth();
+
+  
 
   const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
@@ -84,10 +92,23 @@ export default function StepsScreen() {
         distanceKm: Number(stepsToDistanceKm(steps).toFixed(2)),
         caloriesBurned: Math.round(stepsToCalories(steps)),
       });
+
+      const calDoc= await getTodayCalories();
+      await saveTodayCalories({
+        targetCalories: calDoc?.targetCalories ?? 0,
+        dailyCalories: calDoc?.dailyCaloriesIntake ?? 0,
+        burnedCalories: Math.round(stepsToCalories(steps)),
+        burnedGoal: calDoc?.burnedGoal ?? 0,
+        burnedSource: "steps",
+        goalStatus: calDoc?.goalStatus ?? "active",
+      });
+
     }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [totalSteps, saveStepsDaily]); 
+  }, [totalSteps, saveStepsDaily]);
+  
+  
 
   useEffect(() => {
     const loadDaily = async () => {
