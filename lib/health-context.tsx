@@ -1,18 +1,13 @@
 import { createContext, useContext } from "react";
 import { ID, Query, Permission, Role } from "react-native-appwrite";
-import {
-  databases,
-  account,
-  DATABASE_ID,
-  STEPS_DAILY_COLLECTION_ID,
-} from "./appwrite";
+import {databases,account,DATABASE_ID,STEPS_DAILY_COLLECTION_ID,} from "./appwrite";
 
 const DB_ID = "697ceba5002b026d89f2";
 const HEALTH_LOGS = "health_logId";
 const PERIOD_LOGS = "menstrualcycles";
 const PCOS_LOGS = "pcos_logsId";
 const CALORIE_GOALS = "calorie_goals";
-const STEPS_GOALS = "steps_goals"; // ✅ NEW collection for steps goal
+const STEPS_GOALS = "steps_goals"; 
 
 type HealthContextType = {
   fetchMonthLogs: (date: Date) => Promise<any[]>;
@@ -202,10 +197,14 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   const saveTodayCalories = async ({
     targetCalories,
     dailyCalories,
+    burnedCalories,
+    burnedSource = "manual",
     goalStatus = "active",
   }: {
     targetCalories: number;
     dailyCalories: number;
+    burnedCalories?: number;
+    burnedSource?: "steps" | "manual";
     goalStatus?: string;
   }) => {
     const user = await account.get();
@@ -220,12 +219,17 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       Query.lessThanEqual("endDate", end.toISOString()),
     ]);
 
+    const payload = {
+      targetCalories,
+      dailyCalories,
+      burnedCalories: burnedCalories ?? 0,
+      burnedSource,
+      goalStatus,
+    };
+
     if (existing.documents.length > 0) {
-      await databases.updateDocument(DB_ID, CALORIE_GOALS, existing.documents[0].$id, {
-        targetCalories,
-        dailyCalories,
-        goalStatus,
-      });
+      await databases.updateDocument(DB_ID, CALORIE_GOALS, existing.documents[0].$id, payload); {
+      };
     } else {
       await databases.createDocument(
         DB_ID,
@@ -235,10 +239,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
           userId: user.$id,
           startDate: start.toISOString(),
           endDate: end.toISOString(),
-          
-          goalStatus,
-          targetCalories,
-          dailyCalories,
+          ...payload,
         },
         [
           Permission.read(Role.user(user.$id)),
