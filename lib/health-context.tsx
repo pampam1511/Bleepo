@@ -24,7 +24,12 @@ type HealthContextType = {
   getPeriodStats: (logs: any[]) => { 
     avgLength: number | null; 
     avgCycle:number | null;
-    nextPeriodDate: Date | null };
+    nextPeriodDate: Date | null
+    ovulationDate: Date | null; 
+    fertileStart: Date | null; 
+    fertileEnd: Date | null; 
+    cycleRange: { early: Date; late: Date } | null;
+  };
 
   getTodayCalories: () => Promise<any | null>;
   saveTodayCalories: (params: {
@@ -63,7 +68,16 @@ function computePeriodStats(logs: any[]) {
     .map((l) => new Date(l.date))
     .sort((a, b) => a.getTime() - b.getTime());
 
-  if (!periodDays.length) return { avgLength: null, avgCycle: null ,nextPeriodDate: null };
+  if (!periodDays.length) 
+  return { 
+    avgLength: null, 
+    avgCycle: null ,
+    nextPeriodDate: null,
+    ovulationDate: null,
+    fertileStart:null,
+    fertileEnd:null,
+    cycleRange: null, 
+  };
 
   const streaks: { start: Date; end: Date }[] = [];
   let start = periodDays[0];
@@ -84,19 +98,44 @@ function computePeriodStats(logs: any[]) {
   const lengths = streaks.map((s) => daysBetween(s.start, s.end) + 1);
   const avgLength = Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length);
 
-  let avgCycle: number | null = null;
-  if (streaks.length >= 2) {
-    const diffs = [];
-    for (let i = 1; i < streaks.length; i++) {
-      diffs.push(daysBetween(streaks[i - 1].start, streaks[i].start));
+  let diffs: number[] = [];
+  if(streaks.length >= 2) {
+    for (let i = 1; i < streaks.length; i++) 
+    { 
+      diffs.push(daysBetween(streaks[i - 1].start, streaks[i].start)); 
     }
-    avgCycle = Math.round(diffs.reduce((a, b) => a + b, 0) / diffs.length);
   }
 
-  const nextPeriodDate =
-    avgCycle !== null ? addDays(streaks.at(-1)!.start, avgCycle) : null;
+  let avgCycle: number | null = null;
+  if (diffs.length) {
+    const recent = diffs.slice(-6);
+    const weights = recent.map((_, i) => i + 1);
+    const weighted = 
+      recent.reduce((sum, val, i) => sum + val * weights[i], 0) / 
+      weights.reduce((a, b) => a + b, 0); 
+      avgCycle = Math.round(weighted); 
+    
+    }
 
-  return { avgLength, avgCycle, nextPeriodDate };
+  const lastStart= streaks.at(-1)!.start;
+  const nextPeriodDate =avgCycle !== null ? addDays(streaks.at(-1)!.start, avgCycle) : null;
+
+  const ovulationDate = avgCycle !== null ? addDays(lastStart, avgCycle - 14) : null;
+  const fertileStart = ovulationDate !== null ? addDays(ovulationDate, -5) : null;
+  const fertileEnd = ovulationDate !== null ? addDays(ovulationDate, 1) : null;
+
+  let cycleRange: { early: Date; late: Date } | null = null;
+  if (avgCycle !== null && diffs.length >= 3) { 
+    const mean = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+    const variance  = diffs.reduce ((a,b) => a + Math.pow(b - mean, 2), 0) / diffs.length;
+    const std = Math.round(Math.sqrt(variance));
+
+    const early = addDays(lastStart, avgCycle - std);
+    const late = addDays(lastStart, avgCycle + std);
+    cycleRange = { early, late };
+    }
+
+  return { avgLength, avgCycle, nextPeriodDate, ovulationDate, fertileStart, fertileEnd, cycleRange };
 }
 
 export function HealthProvider({ children }: { children: React.ReactNode }) {
@@ -219,14 +258,14 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     burnedCalories,
     burnedGoal,
     burnedSource = "manual",
-    goalStatus = "active", // ✅ CHANGED
+    goalStatus = "active", 
   }: {
     targetCalories: number;
     dailyCalories: number;
     burnedCalories?: number;
     burnedGoal?: number;
     burnedSource?: "steps" | "manual";
-    goalStatus?: string; // ✅ CHANGED
+    goalStatus?: string; 
   }) => {
     const user = await account.get();
     const start = new Date();
