@@ -21,7 +21,10 @@ type HealthContextType = {
   getDetailLog: (healthLogId: string, type: "PERIOD" | "PCOS") => Promise<any>;
   saveHealthLog: (params: { date: string; type: "PERIOD" | "PCOS"; payload: any }) => Promise<void>;
 
-  getPeriodStats: (logs: any[]) => { avgLength: number | null; nextPeriodDate: Date | null };
+  getPeriodStats: (logs: any[]) => { 
+    avgLength: number | null; 
+    avgCycle:number | null;
+    nextPeriodDate: Date | null };
 
   getTodayCalories: () => Promise<any | null>;
   saveTodayCalories: (params: {
