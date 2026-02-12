@@ -63,7 +63,7 @@ function computePeriodStats(logs: any[]) {
     .map((l) => new Date(l.date))
     .sort((a, b) => a.getTime() - b.getTime());
 
-  if (!periodDays.length) return { avgLength: null, nextPeriodDate: null };
+  if (!periodDays.length) return { avgLength: null, avgCycle: null ,nextPeriodDate: null };
 
   const streaks: { start: Date; end: Date }[] = [];
   let start = periodDays[0];
@@ -96,7 +96,7 @@ function computePeriodStats(logs: any[]) {
   const nextPeriodDate =
     avgCycle !== null ? addDays(streaks.at(-1)!.start, avgCycle) : null;
 
-  return { avgLength, nextPeriodDate };
+  return { avgLength, avgCycle, nextPeriodDate };
 }
 
 export function HealthProvider({ children }: { children: React.ReactNode }) {
