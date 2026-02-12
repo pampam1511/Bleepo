@@ -7,8 +7,10 @@ import { useHealth } from "@/lib/health-context";
 const WEEK_DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const MOOD_OPTIONS = ["😢", "😕", "😐", "🙂", "😄"];
 const PAIN_LEVELS = [1, 2, 3, 4, 5];
-const BLEEDING_OPTIONS = ["none", "spotting", "light", "medium", "heavy"] as const; // ✅ matches DB
+const BLEEDING_OPTIONS = ["none", "spotting", "light", "medium", "heavy"] as const; 
 const ACNE_LEVELS = ["mild", "moderate", "severe"] as const;
+const SYMPTOM_OPTIONS = ["cramps", "headache", "fatigue", "nausea", "bloating"] as const;
+
 
 
 
@@ -58,6 +60,8 @@ export default function CalendarScreen() {
   const [acne_levels, setAcneLevel] = useState<"none" | "mild" | "moderate" | "severe">("mild");
   const [fatigue, setFatigue] = useState(3);
   const [increasedAppetite, setIncreasedAppetite] = useState(3);
+
+  const [periodSymptoms, setPeriodSymptoms] = useState<string[]>([]);
 
   const monthLabel = date.toLocaleString("en-US", {
     month: "long",
@@ -121,6 +125,7 @@ export default function CalendarScreen() {
         setPhotos(detail.photoIds ?? []);
         setPeriodStart(detail.startDate ? new Date(detail.startDate) : null);
         setPeriodEnd(detail.endDate ? new Date(detail.endDate) : null);
+        setPeriodSymptoms(detail.symptoms ?? []);
       }
 
       if (activeMode === "PCOS") {
@@ -158,7 +163,7 @@ export default function CalendarScreen() {
           ? {
               painLevel,
               flowIntensity: bleeding,
-              symptoms: moods[0] ?? null,
+              symptoms: periodSymptoms,
               padChanges,
               notes,
               photoIds: photos,
@@ -210,7 +215,7 @@ export default function CalendarScreen() {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>CALENDAR</Text>
+      
 
       <View style={styles.monthRow}>
         <TouchableOpacity
@@ -384,14 +389,18 @@ export default function CalendarScreen() {
               )}
 
               <Text style={styles.label}>Flow Intensity</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6 }}>
+              <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              contentContainerStyle={{ paddingVertical: 6 }}>
               
-                {BLEEDING_OPTIONS.map((b) => (
+                {BLEEDING_OPTIONS.map((b, i) => (
                   <TouchableOpacity
                     key={b}
                     style={[
                       styles.bleedingPill,
                       bleeding === b && styles.bleedingSelected,
+                      i !== BLEEDING_OPTIONS.length - 1 && { marginRight: 8 },
                     ]}
                     onPress={() => setBleeding(b)
                     }
@@ -414,6 +423,31 @@ export default function CalendarScreen() {
                   />
                 ))}
               </View>
+
+              <Text style={styles.label}>Symptoms</Text>
+              <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false} 
+              contentContainerStyle={{ paddingVertical: 6 }}
+              >
+                {SYMPTOM_OPTIONS.map((s,i) => (
+                <TouchableOpacity 
+                key={s} 
+                style={[ 
+                  styles.bleedingPill, 
+                  periodSymptoms.includes(s) && styles.bleedingSelected,
+                  i !== SYMPTOM_OPTIONS.length - 1 && { marginRight: 8 }, 
+                ]} 
+                onPress={() => 
+                  setPeriodSymptoms((prev) => 
+                  prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s] 
+                  )
+                } 
+                > 
+                <Text>{s}</Text> 
+                </TouchableOpacity>
+              ))}
+              </ScrollView>
 
               <Text style={styles.label}>Mood</Text>
               <View style={styles.moodRow}>
@@ -629,7 +663,7 @@ const styles = StyleSheet.create({
   monthText: { fontSize: 16, fontWeight: "600" },
   arrow: { fontSize: 18 },
 
-  calendarCard: { backgroundColor: "#e0e0e0", padding: 16, borderRadius: 16, borderWidth: 2, borderColor: "#2b87ff" },
+  calendarCard: { backgroundColor: "#FFE6EA", padding: 16, borderRadius: 16, borderWidth: 2, borderColor: "#b2d8d8" },
   weekRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   weekDay: { fontWeight: "700", fontSize: 12 },
   daysGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
@@ -642,37 +676,37 @@ const styles = StyleSheet.create({
   cardContent: { paddingBottom: 40 },
 
   filters: { flexDirection: "row", justifyContent: "space-around", marginVertical: 20 },
-  pill: { padding: 10, borderRadius: 20, backgroundColor: "#d0d0d0" },
-  activePill: { backgroundColor: "#bcbcbc" },
+  pill: { padding: 10, borderRadius: 20, backgroundColor: "#008080" },
+  activePill: { backgroundColor: "#FFE6EA" },
   pillText: { fontWeight: "700" },
 
-  cycleCard: { backgroundColor: "#e0e0e0", padding: 16, borderRadius: 16, marginBottom: 20 },
+  cycleCard: { backgroundColor: "#008080", padding: 16, borderRadius: 16, marginBottom: 20, borderColor: "#b2d8d8" },
   sectionTitle: { fontWeight: "700", marginBottom: 12 },
 
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
-  statBox: { backgroundColor: "#d0d0d0", borderRadius: 12, padding: 16, width: "48%", alignItems: "center" },
+  statBox: { backgroundColor: "#FFE6EA", borderRadius: 12, padding: 16, width: "48%", alignItems: "center" },
   statLabel: { fontSize: 12, fontWeight: "700" },
   statValue: { fontSize: 36, fontWeight: "900" },
-  statValuE: { fontSize: 20, fontWeight: "800" },
+  statValuE: { fontSize: 20, fontWeight: "800" },  
   statUnit: { fontWeight: "700" },
 
   label: { fontWeight: "600", marginTop: 6 },
   dateText: { fontWeight: "600", marginBottom: 6 },
 
   sliderRow: { flexDirection: "row", gap: 6, marginVertical: 6 },
-  sliderDot: { width: 30, height: 8, backgroundColor: "#ccc", borderRadius: 4 },
-  sliderActive: { backgroundColor: "#888" },
+  sliderDot: { width: 30, height: 8, backgroundColor: "#FFC0CB", borderRadius: 4 },
+  sliderActive: { backgroundColor: "#AA336A" },
 
   moodRow: { flexDirection: "row", gap: 10, marginVertical: 8 },
-  moodCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#d0d0d0", alignItems: "center", justifyContent: "center" },
-  moodSelected: { backgroundColor: "#bcbcbc" },
+  moodCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFE6EA", alignItems: "center", justifyContent: "center" },
+  moodSelected: { backgroundColor: "#AA336A" },
 
   bleedingRow: { flexDirection: "row", gap: 8, marginVertical: 6 },
-  bleedingPill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#d0d0d0" },
-  bleedingSelected: { backgroundColor: "#bcbcbc" },
+  bleedingPill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#FFE6EA" },
+  bleedingSelected: { backgroundColor: "#AA336A" },
 
   notesInput: {
-    backgroundColor: "#d0d0d0",
+    backgroundColor: "#FFE6EA",
     borderRadius: 10,
     padding: 10,
     minHeight: 60,
