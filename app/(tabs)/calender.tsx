@@ -192,7 +192,15 @@ export default function CalendarScreen() {
     setActiveMode(null);
   };
 
-  const { avgLength, nextPeriodDate } = useMemo(
+  const { 
+    avgLength, 
+    avgCycle,
+    nextPeriodDate,
+    ovulationDate,
+    fertileStart,
+    fertileEnd,
+    cycleRange,
+  } = useMemo(
     () => getPeriodStats(allLogs),
     [allLogs]
   );
@@ -267,12 +275,56 @@ export default function CalendarScreen() {
                   <Text style={styles.statValue}>{nextPeriodDays ?? "--"}</Text>
                   <Text style={styles.statUnit}>DAYS</Text>
                 </View>
+
                 <View style={styles.statBox}>
                   <Text style={styles.statLabel}>AVERAGE PERIOD</Text>
                   <Text style={styles.statValue}>{avgLength ?? "--"}</Text>
                   <Text style={styles.statUnit}>DAYS</Text>
                 </View>
               </View>
+
+              <View style={styles.statsRow}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statLabel}>CYCLE LENGTH</Text>
+                  <Text style={styles.statValue}>{avgCycle ?? "--"}</Text>
+                  <Text style={styles.statUnit}>DAYS</Text>
+                </View>
+                
+                <View style={styles.statBox}>
+                  <Text style={styles.statLabel}>OVULATION</Text>
+                  <Text style={styles.statValuE}>
+                    {ovulationDate ? ovulationDate.toDateString() : "--"}
+                  </Text>
+              </View>
+            </View>
+
+              
+              <View style={styles.statsRow}>
+                <View style={[styles.statBox, ]}>
+                  <Text style={styles.statLabel}>FERTILE WINDOW</Text>
+                  <Text style={styles.statValuE}>
+                    {fertileStart && fertileEnd
+                    ? `${fertileStart.toDateString()} - ${fertileEnd.toDateString()}`
+                    : "--"}
+                  </Text>
+                </View>
+
+                
+                  <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>CYCLE RANGE</Text>
+                    <Text style={styles.statValuE}>
+                      {cycleRange 
+                      ? `${cycleRange.early.toDateString()} - ${cycleRange.late.toDateString()}` 
+                      : "--"}
+                    </Text>
+              
+                </View>
+
+
+              </View>
+
+
+
             </View>
           )}
 
@@ -597,10 +649,11 @@ const styles = StyleSheet.create({
   cycleCard: { backgroundColor: "#e0e0e0", padding: 16, borderRadius: 16, marginBottom: 20 },
   sectionTitle: { fontWeight: "700", marginBottom: 12 },
 
-  statsRow: { flexDirection: "row", justifyContent: "space-between" },
+  statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
   statBox: { backgroundColor: "#d0d0d0", borderRadius: 12, padding: 16, width: "48%", alignItems: "center" },
   statLabel: { fontSize: 12, fontWeight: "700" },
   statValue: { fontSize: 36, fontWeight: "900" },
+  statValuE: { fontSize: 20, fontWeight: "800" },
   statUnit: { fontWeight: "700" },
 
   label: { fontWeight: "600", marginTop: 6 },
