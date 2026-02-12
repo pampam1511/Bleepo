@@ -7,7 +7,11 @@ const USER_PROFILE = "user_profile";
 
 type ProfileContextType = {
     getUserProfile: () => Promise<any | null>;
-    saveUserProfile: (params: { heightCm: number; weightKg: number }) => Promise<void>;
+    saveUserProfile: (params: { 
+        heightCm: number;
+        weightKg: number ;
+        weightGoalKg: number;
+    }) => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -24,9 +28,11 @@ export function ProfileProvider({ children}: { children: React.ReactNode}) {
     const saveUserProfile = async ({
         heightCm,
         weightKg,
+        weightGoalKg,
     }: {
         heightCm: number;
         weightKg: number;
+        weightGoalKg: number;
     }) =>{ 
         const user = await account.get();
         
@@ -38,6 +44,7 @@ export function ProfileProvider({ children}: { children: React.ReactNode}) {
             userId: user.$id,
             heightCm,
             weightKg,
+            weightGoalKg,
             updatedAt: new Date().toISOString(),
         };
 
