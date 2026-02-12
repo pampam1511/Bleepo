@@ -1,13 +1,19 @@
 import { createContext, useContext } from "react";
 import { ID, Query, Permission, Role } from "react-native-appwrite";
-import {databases,account,DATABASE_ID,STEPS_DAILY_COLLECTION_ID,} from "./appwrite";
+import {
+  databases,
+  account,
+  DATABASE_ID,
+  STEPS_DAILY_COLLECTION_ID,
+} from "./appwrite";
 
 const DB_ID = "697ceba5002b026d89f2";
 const HEALTH_LOGS = "health_logId";
 const PERIOD_LOGS = "menstrualcycles";
 const PCOS_LOGS = "pcos_logsId";
 const CALORIE_GOALS = "calorie_goals";
-const STEPS_GOALS = "steps_goals"; 
+const STEPS_GOALS = "steps_goals";
+const NUTRITION_LOGS = "nutrition_logs";
 
 type HealthContextType = {
   fetchMonthLogs: (date: Date) => Promise<any[]>;
@@ -18,18 +24,28 @@ type HealthContextType = {
   getPeriodStats: (logs: any[]) => { avgLength: number | null; nextPeriodDate: Date | null };
 
   getTodayCalories: () => Promise<any | null>;
-  saveTodayCalories: (params: { targetCalories: number; dailyCalories: number; goalStatus?: string }) => Promise<void>;
+  saveTodayCalories: (params: {
+    targetCalories: number;
+    dailyCalories: number;
+    burnedCalories?: number;
+    burnedGoal?: number;
+    burnedSource?: "steps" | "manual";
+    goalStatus?: string; // ✅ CHANGED
+  }) => Promise<void>;
 
   getStepsDaily: (start: Date, end: Date) => Promise<any[]>;
   saveStepsDaily: (date: Date, payload: any) => Promise<void>;
 
-  getStepsGoal: () => Promise<any | null>; // ✅ NEW
-  saveStepsGoal: (params: { targetSteps: number; goalStatus?: string }) => Promise<void>; // ✅ NEW
+  getStepsGoal: () => Promise<any | null>;
+  saveStepsGoal: (params: { targetSteps: number; goalStatus?: string }) => Promise<void>;
+
+  getTodayNutrition: () => Promise<any | null>;
+  saveTodayNutrition: (params: { carbs: number; fat: number; protein: number }) => Promise<void>;
 };
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
 
-// ✅ stats helpers
+// helpers
 function addDays(d: Date, days: number) {
   const copy = new Date(d);
   copy.setDate(copy.getDate() + days);
@@ -198,14 +214,16 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     targetCalories,
     dailyCalories,
     burnedCalories,
+    burnedGoal,
     burnedSource = "manual",
-    goalStatus = "active",
+    goalStatus = "active", // ✅ CHANGED
   }: {
     targetCalories: number;
     dailyCalories: number;
     burnedCalories?: number;
+    burnedGoal?: number;
     burnedSource?: "steps" | "manual";
-    goalStatus?: string;
+    goalStatus?: string; // ✅ CHANGED
   }) => {
     const user = await account.get();
     const start = new Date();
@@ -221,15 +239,15 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
 
     const payload = {
       targetCalories,
-      dailyCalories,
+      dailyCaloriesIntake: dailyCalories,
       burnedCalories: burnedCalories ?? 0,
+      burnedGoal: burnedGoal ?? 0,
       burnedSource,
       goalStatus,
     };
 
     if (existing.documents.length > 0) {
-      await databases.updateDocument(DB_ID, CALORIE_GOALS, existing.documents[0].$id, payload); {
-      };
+      await databases.updateDocument(DB_ID, CALORIE_GOALS, existing.documents[0].$id, payload);
     } else {
       await databases.createDocument(
         DB_ID,
@@ -303,7 +321,54 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // ✅ NEW: get steps goal
+  const getTodayNutrition = async () => {
+    const user = await account.get();
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const res = await databases.listDocuments(DB_ID, NUTRITION_LOGS, [
+      Query.equal("userId", user.$id),
+      Query.greaterThanEqual("date", start.toISOString()),
+      Query.lessThanEqual("date", end.toISOString()),
+    ]);
+
+    return res.documents[0] ?? null;
+  };
+
+  const saveTodayNutrition = async ({
+    carbs,
+    fat,
+    protein,
+  }: {
+    carbs: number;
+    fat: number;
+    protein: number;
+  }) => {
+    const user = await account.get();
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const existing = await databases.listDocuments(DB_ID, NUTRITION_LOGS, [
+      Query.equal("userId", user.$id),
+      Query.greaterThanEqual("date", start.toISOString()),
+      Query.lessThanEqual("date", new Date().toISOString()),
+    ]);
+
+    const payload = { userId: user.$id, date: start.toISOString(), carbs, fat, protein };
+
+    if (existing.documents.length > 0) {
+      await databases.updateDocument(DB_ID, NUTRITION_LOGS, existing.documents[0].$id, payload);
+    } else {
+      await databases.createDocument(DB_ID, NUTRITION_LOGS, ID.unique(), payload, [
+        Permission.read(Role.user(user.$id)),
+        Permission.update(Role.user(user.$id)),
+        Permission.delete(Role.user(user.$id)),
+      ]);
+    }
+  };
+
   const getStepsGoal = async () => {
     const user = await account.get();
     const res = await databases.listDocuments(DB_ID, STEPS_GOALS, [
@@ -313,7 +378,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     return res.documents[0] ?? null;
   };
 
-  // ✅ NEW: save steps goal
   const saveStepsGoal = async ({
     targetSteps,
     goalStatus = "active",
@@ -366,8 +430,10 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         saveTodayCalories,
         getStepsDaily,
         saveStepsDaily,
-        getStepsGoal, // ✅
-        saveStepsGoal, // ✅
+        getStepsGoal,
+        saveStepsGoal,
+        getTodayNutrition,
+        saveTodayNutrition,
       }}
     >
       {children}

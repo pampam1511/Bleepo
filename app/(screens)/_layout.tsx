@@ -5,6 +5,7 @@ export default function ScreensLayout() {
     <Stack>
       <Stack.Screen name="calories" options={{ title: "Calories" }} />
       <Stack.Screen name="steps" options={{ title: "Activity" }} />
+      <Stack.Screen name="leaderboard" options={{ title: "Leader Board" }} />
     </Stack>
   );
 }
