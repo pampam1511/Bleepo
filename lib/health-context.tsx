@@ -20,6 +20,7 @@ type HealthContextType = {
   fetchAllLogs: () => Promise<any[]>;
   getDetailLog: (healthLogId: string, type: "PERIOD" | "PCOS") => Promise<any>;
   saveHealthLog: (params: { date: string; type: "PERIOD" | "PCOS"; payload: any }) => Promise<void>;
+  getCaloriesRange: (start: Date, end: Date) => Promise<any[]>;
 
   getPeriodStats: (logs: any[]) => { 
     avgLength: number | null; 
@@ -148,6 +149,17 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       Query.equal("userId", user.$id),
       Query.greaterThanEqual("date", start.toISOString()),
       Query.lessThanEqual("date", end.toISOString()),
+    ]);
+
+    return res.documents;
+  };
+
+  const getCaloriesRange = async (start: Date, end: Date) => {
+    const user = await account.get();
+    const res = await databases.listDocuments(DB_ID, CALORIE_GOALS, [
+      Query.equal("userId", user.$id),
+      Query.greaterThanEqual("startDate", start.toISOString()),
+      Query.lessThanEqual("endDate", end.toISOString()),
     ]);
 
     return res.documents;
@@ -470,6 +482,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
         getPeriodStats,
         getTodayCalories,
         saveTodayCalories,
+        getCaloriesRange,
         getStepsDaily,
         saveStepsDaily,
         getStepsGoal,
