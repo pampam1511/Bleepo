@@ -4,10 +4,13 @@ import { Button } from "react-native-paper";
 import React, { useEffect, useState, useMemo} from "react";
 import { useProfile } from "@/lib/profile-context";
 import { useHealth } from "@/lib/health-context";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+
 
 export default function profileScreen() {
     const {signOut} = useAuth()
-
+    
     const {getUserProfile, saveUserProfile} = useProfile();
 
     const {
@@ -117,6 +120,45 @@ export default function profileScreen() {
         fertileEnd,
         cycleRange,
     } = useMemo(() => getPeriodStats(rangeLogs), [rangeLogs]);
+
+    const exportPdf = async () => {
+        const html = 
+        `<html>
+        <body style="font-family: Arial; padding: 24px;">
+        <h1>Health Report (${reportRange})</h1>
+
+        <h2>Steps & Calories</h2>
+        <p><b>Steps Total:</b> ${stepsTotal}</p>
+        <p><b>Steps Avg/Day:</b> ${stepsAvg}</p>
+        <p><b>Calories Intake Total:</b> ${calIntakeTotal}</p>
+        <p><b>Calories Burned Total:</b> ${calBurnedTotal}</p>
+
+        <h2>Cycle Summary</h2>
+        <p><b>Avg Period Length:</b> ${avgLength ?? "--"} days</p>
+        <p><b>Cycle Length:</b> ${avgCycle ?? "--"} days</p>
+        <p><b>Next Period:</b> ${nextPeriodDate ? nextPeriodDate.toDateString() : "--"}</p>
+        <p><b>Ovulation:</b> ${ovulationDate ? ovulationDate.toDateString() : "--"}</p>
+        <p><b>Fertile Window:</b> ${
+            fertileStart && fertileEnd
+            ? `${fertileStart.toDateString()} - ${fertileEnd.toDateString()}`
+            : "--"
+        }</p>
+        <p><b>Cycle Range:</b> ${
+            cycleRange
+            ? `${cycleRange.early.toDateString()} - ${cycleRange.late.toDateString()}`
+            : "--"
+        }</p>
+
+        <h2>PCOS Summary</h2>
+        <p><b>PCOS Entries:</b> ${pcosCount} days</p>
+        </body>
+        </html> 
+        `;
+        const { uri } = await Print.printToFileAsync({ html });
+        if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(uri);
+        }
+    };
 
     
     
@@ -230,10 +272,7 @@ export default function profileScreen() {
                     <TouchableOpacity 
                     style={styles.reportBtn}
 
-                    onPress={() => {
-                        //TODO HOOK THIS UP TO PDF EXPORT LATER
-                        console.log("EXPORT PDF");
-                    }}
+                    onPress={exportPdf}
                     >
                     <Text style={styles.reportBtnText}>EXPORT PDF</Text>
                     </TouchableOpacity>

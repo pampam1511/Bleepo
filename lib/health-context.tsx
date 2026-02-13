@@ -20,16 +20,15 @@ type HealthContextType = {
   fetchAllLogs: () => Promise<any[]>;
   getDetailLog: (healthLogId: string, type: "PERIOD" | "PCOS") => Promise<any>;
   saveHealthLog: (params: { date: string; type: "PERIOD" | "PCOS"; payload: any }) => Promise<void>;
-  getCaloriesRange: (start: Date, end: Date) => Promise<any[]>;
 
-  getPeriodStats: (logs: any[]) => { 
-    avgLength: number | null; 
-    avgCycle:number | null;
-    nextPeriodDate: Date | null
-    ovulationDate: Date | null; 
-    fertileStart: Date | null; 
-    fertileEnd: Date | null; 
-    cycleRange: { early: Date; late: Date } | null;
+  getPeriodStats: (logs: any[]) => {
+    avgLength: number | null;
+    avgCycle?: number | null;
+    nextPeriodDate?: Date | null;
+    ovulationDate?: Date | null;
+    fertileStart?: Date | null;
+    fertileEnd?: Date | null;
+    cycleRange?: { early: Date; late: Date } | null;
   };
 
   getTodayCalories: () => Promise<any | null>;
@@ -39,8 +38,10 @@ type HealthContextType = {
     burnedCalories?: number;
     burnedGoal?: number;
     burnedSource?: "steps" | "manual";
-    goalStatus?: string; // ✅ CHANGED
+    goalStatus?: string;
   }) => Promise<void>;
+
+  getCaloriesRange: (start: Date, end: Date) => Promise<any[]>;
 
   getStepsDaily: (start: Date, end: Date) => Promise<any[]>;
   saveStepsDaily: (date: Date, payload: any) => Promise<void>;
@@ -69,16 +70,7 @@ function computePeriodStats(logs: any[]) {
     .map((l) => new Date(l.date))
     .sort((a, b) => a.getTime() - b.getTime());
 
-  if (!periodDays.length) 
-  return { 
-    avgLength: null, 
-    avgCycle: null ,
-    nextPeriodDate: null,
-    ovulationDate: null,
-    fertileStart:null,
-    fertileEnd:null,
-    cycleRange: null, 
-  };
+  if (!periodDays.length) return { avgLength: null, nextPeriodDate: null };
 
   const streaks: { start: Date; end: Date }[] = [];
   let start = periodDays[0];
@@ -99,44 +91,30 @@ function computePeriodStats(logs: any[]) {
   const lengths = streaks.map((s) => daysBetween(s.start, s.end) + 1);
   const avgLength = Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length);
 
-  let diffs: number[] = [];
-  if(streaks.length >= 2) {
-    for (let i = 1; i < streaks.length; i++) 
-    { 
-      diffs.push(daysBetween(streaks[i - 1].start, streaks[i].start)); 
+  let avgCycle: number | null = null;
+  if (streaks.length >= 2) {
+    const diffs = [];
+    for (let i = 1; i < streaks.length; i++) {
+      diffs.push(daysBetween(streaks[i - 1].start, streaks[i].start));
     }
+    avgCycle = Math.round(diffs.reduce((a, b) => a + b, 0) / diffs.length);
   }
 
-  let avgCycle: number | null = null;
-  if (diffs.length) {
-    const recent = diffs.slice(-6);
-    const weights = recent.map((_, i) => i + 1);
-    const weighted = 
-      recent.reduce((sum, val, i) => sum + val * weights[i], 0) / 
-      weights.reduce((a, b) => a + b, 0); 
-      avgCycle = Math.round(weighted); 
-    
-    }
+  const nextPeriodDate =
+    avgCycle !== null ? addDays(streaks.at(-1)!.start, avgCycle) : null;
 
-  const lastStart= streaks.at(-1)!.start;
-  const nextPeriodDate =avgCycle !== null ? addDays(streaks.at(-1)!.start, avgCycle) : null;
+  const ovulationDate = avgCycle ? addDays(streaks.at(-1)!.start, avgCycle - 14) : null;
+  const fertileStart = ovulationDate ? addDays(ovulationDate, -5) : null;
+  const fertileEnd = ovulationDate ? addDays(ovulationDate, 1) : null;
 
-  const ovulationDate = avgCycle !== null ? addDays(lastStart, avgCycle - 14) : null;
-  const fertileStart = ovulationDate !== null ? addDays(ovulationDate, -5) : null;
-  const fertileEnd = ovulationDate !== null ? addDays(ovulationDate, 1) : null;
-
-  let cycleRange: { early: Date; late: Date } | null = null;
-  if (avgCycle !== null && diffs.length >= 3) { 
-    const mean = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-    const variance  = diffs.reduce ((a,b) => a + Math.pow(b - mean, 2), 0) / diffs.length;
-    const std = Math.round(Math.sqrt(variance));
-
-    const early = addDays(lastStart, avgCycle - std);
-    const late = addDays(lastStart, avgCycle + std);
-    cycleRange = { early, late };
-    }
-
-  return { avgLength, avgCycle, nextPeriodDate, ovulationDate, fertileStart, fertileEnd, cycleRange };
+  return {
+    avgLength,
+    avgCycle,
+    nextPeriodDate,
+    ovulationDate,
+    fertileStart,
+    fertileEnd,
+  };
 }
 
 export function HealthProvider({ children }: { children: React.ReactNode }) {
@@ -149,17 +127,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       Query.equal("userId", user.$id),
       Query.greaterThanEqual("date", start.toISOString()),
       Query.lessThanEqual("date", end.toISOString()),
-    ]);
-
-    return res.documents;
-  };
-
-  const getCaloriesRange = async (start: Date, end: Date) => {
-    const user = await account.get();
-    const res = await databases.listDocuments(DB_ID, CALORIE_GOALS, [
-      Query.equal("userId", user.$id),
-      Query.greaterThanEqual("startDate", start.toISOString()),
-      Query.lessThanEqual("endDate", end.toISOString()),
     ]);
 
     return res.documents;
@@ -270,14 +237,14 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     burnedCalories,
     burnedGoal,
     burnedSource = "manual",
-    goalStatus = "active", 
+    goalStatus = "active",
   }: {
     targetCalories: number;
     dailyCalories: number;
     burnedCalories?: number;
     burnedGoal?: number;
     burnedSource?: "steps" | "manual";
-    goalStatus?: string; 
+    goalStatus?: string;
   }) => {
     const user = await account.get();
     const start = new Date();
@@ -322,6 +289,16 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getCaloriesRange = async (start: Date, end: Date) => {
+    const user = await account.get();
+    const res = await databases.listDocuments(DB_ID, CALORIE_GOALS, [
+      Query.equal("userId", user.$id),
+      Query.greaterThanEqual("startDate", start.toISOString()),
+      Query.lessThanEqual("endDate", end.toISOString()),
+    ]);
+    return res.documents;
+  };
+
   const getStepsDaily = async (start: Date, end: Date) => {
     const user = await account.get();
     const res = await databases.listDocuments(
@@ -340,8 +317,6 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
     const user = await account.get();
     const start = new Date(date);
     start.setHours(0, 0, 0, 0);
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
 
     const existing = await databases.listDocuments(
       DATABASE_ID,
@@ -349,7 +324,7 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
       [
         Query.equal("userId", user.$id),
         Query.greaterThanEqual("date", start.toISOString()),
-        Query.lessThanEqual("date", end.toISOString()),
+        Query.lessThanEqual("date", new Date().toISOString()),
       ]
     );
 
