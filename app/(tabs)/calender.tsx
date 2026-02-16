@@ -106,7 +106,8 @@ export default function CalendarScreen() {
             d.getDate() === selectedDay
           );
         })
-      : null;
+      : [];
+      //const selectedLog = selectedLog.length ? selectedLogs[selectedLog.length - 1] : null;
 
   useEffect(() => {
     if (!selectedLog || !activeMode) return;
@@ -168,7 +169,7 @@ export default function CalendarScreen() {
               notes,
               photoIds: photos,
               startDate: safeStart ? safeStart.toISOString() : null,
-              endDate: safeEnd ? safeEnd.toISOString() : null,
+              endDate: null,
             }
           : {
               painLevel,

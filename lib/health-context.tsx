@@ -67,7 +67,9 @@ function daysBetween(a: Date, b: Date) {
 function computePeriodStats(logs: any[]) {
   const periodDays = logs
     .filter((l) => String(l.type).toUpperCase() === "PERIOD")
-    .map((l) => new Date(l.date))
+    .map((l) => new Date(l.date).toISOString().slice(0, 10))
+    .filter((d, i, arr) => arr.indexOf(d) === i) // unique
+    .map((d) => new Date(d))
     .sort((a, b) => a.getTime() - b.getTime());
 
   if (!periodDays.length) return { avgLength: null, nextPeriodDate: null };
@@ -161,56 +163,33 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   }) => {
     const user = await account.get();
 
-    const existing = await databases.listDocuments(DB_ID, HEALTH_LOGS, [
-      Query.equal("userId", user.$id),
-      Query.equal("date", date),
-    ]);
+    const created = await databases.createDocument(
+      DB_ID,
+      HEALTH_LOGS,
+      ID.unique(),
+      { userId: user.$id, date, type },
+      [
+        Permission.read(Role.user(user.$id)),
+        Permission.update(Role.user(user.$id)),
+        Permission.delete(Role.user(user.$id)),
+      ]
+    );
 
-    let healthLogId: string;
-
-    if (existing.documents.length > 0) {
-      healthLogId = existing.documents[0].$id;
-    } else {
-      const created = await databases.createDocument(
-        DB_ID,
-        HEALTH_LOGS,
-        ID.unique(),
-        { userId: user.$id, date, type },
-        [
-          Permission.read(Role.user(user.$id)),
-          Permission.update(Role.user(user.$id)),
-          Permission.delete(Role.user(user.$id)),
-        ]
-      );
-      healthLogId = created.$id;
-    }
+    const healthLogId = created.$id;
 
     const collection = type === "PERIOD" ? PERIOD_LOGS : PCOS_LOGS;
 
-    const existingDetail = await databases.listDocuments(DB_ID, collection, [
-      Query.equal("health_logId", healthLogId),
-    ]);
-
-    if (existingDetail.documents.length > 0) {
-      await databases.updateDocument(
-        DB_ID,
-        collection,
-        existingDetail.documents[0].$id,
-        { health_logId: healthLogId, ...payload }
-      );
-    } else {
-      await databases.createDocument(
-        DB_ID,
-        collection,
-        ID.unique(),
-        { health_logId: healthLogId, ...payload },
-        [
-          Permission.read(Role.user(user.$id)),
-          Permission.update(Role.user(user.$id)),
-          Permission.delete(Role.user(user.$id)),
-        ]
-      );
-    }
+    await databases.createDocument(
+      DB_ID,
+      collection,
+      ID.unique(),
+      { health_logId: healthLogId, ...payload },
+      [
+        Permission.read(Role.user(user.$id)),
+        Permission.update(Role.user(user.$id)),
+        Permission.delete(Role.user(user.$id)),
+      ]
+    );
   };
 
   const getPeriodStats = (logs: any[]) => computePeriodStats(logs);

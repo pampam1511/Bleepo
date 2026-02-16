@@ -4,21 +4,15 @@ import { Button } from "react-native-paper";
 import React, { useEffect, useState, useMemo} from "react";
 import { useProfile } from "@/lib/profile-context";
 import { useHealth } from "@/lib/health-context";
+import { useProviderAccess } from "@/lib/provider-access-context";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 
 
 export default function profileScreen() {
     const {signOut} = useAuth()
-    
     const {getUserProfile, saveUserProfile} = useProfile();
-
-    const {
-        fetchAllLogs,
-        getPeriodStats,
-        getStepsDaily,
-        getCaloriesRange,
-    } = useHealth();
+    const {fetchAllLogs,getPeriodStats,getStepsDaily,getCaloriesRange} = useHealth();
 
     const [heightCm, setHeightCm] = useState("0");
     const [weightKg, setWeightKg] = useState("0");
@@ -35,6 +29,11 @@ export default function profileScreen() {
     const [rangeLogs, setRangeLogs] = useState<any[]>([]);
 
     const [openReports, setOpenReports] = useState(false);
+
+    const { listProviders, grantAccess, revokeAccess, getMyProviders } = useProviderAccess();
+    const [providers, setProviders] = useState<any[]>([]);
+    const [myAccess, setMyAccess] = useState<any[]>([]);
+    const [dataSharing, setDataSharing] = useState(false);
 
 
 
@@ -60,6 +59,7 @@ export default function profileScreen() {
             heightCm: Number(heightCm || 0),
             weightKg: Number(weightKg || 0),
             weightGoalKg: Number(weightGoalKg || 0),
+            dataSharing
         });
         Keyboard.dismiss();
     };
@@ -78,6 +78,16 @@ export default function profileScreen() {
         end.setHours(23, 59, 59, 999);
         return { start, end };
     };
+
+    useEffect(() => {
+        const loadProviders = async () => {
+            const all = await listProviders();
+            setProviders(all);
+            const access = await getMyProviders();
+            setMyAccess(access);
+        };
+        loadProviders();
+    }, []);
 
     useEffect(() => {   
         const loadRangeData = async () => {
@@ -268,7 +278,6 @@ export default function profileScreen() {
                     value={weightGoalKg}
                     onChangeText={setWeightGoalKg}
                     />
-                    
                     <Text style={styles.label}>BMI</Text>
                     <Text style={styles.bmiValue}>{bmi}</Text>
                     
@@ -286,13 +295,16 @@ export default function profileScreen() {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>DATA SHARING</Text>
                     <View style={styles.toggleRow}>
-                        <Text style={styles.toggleText}>YES</Text>
-                        <Text style={styles.toggleText}>NO</Text>
+                        <TouchableOpacity onPress={() => setDataSharing(true)}>
+                            <Text style={[styles.toggleText, dataSharing && styles.reportActive]}>YES</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setDataSharing(false)}>
+                            <Text style={[styles.toggleText, !dataSharing && styles.reportActive]}>NO</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
                 {/* REPORT */}
-
                 <TouchableOpacity
                 style={styles.section}
                 onPress={() => setOpenReports((p) => !p)}
@@ -350,17 +362,27 @@ export default function profileScreen() {
                     </>
                 )}
                 </TouchableOpacity>
-                
-
-
-                        
-                        
+        
                 {/* LINKED HEALTHCARE PROVIDER */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>LINKED HEALTHCARE PROVIDER</Text>
-                    <Text style={styles.subText}>DR PAM - ACCESS UNTIL 15/NOV/2025</Text>
+
+                    {providers.map((p) => {
+                        const linked = myAccess.find((a) => a.providerId === p.providerId && a.status === "active");
+                        return (
+                            <TouchableOpacity
+                            key={p.$id}
+                            style={styles.providerRow}
+                            onPress={() => linked ? revokeAccess(p.providerId) : grantAccess(p.providerId)}
+                            >
+                                <Text style={styles.providerName}>{p.name}</Text>
+                                <Text style={styles.providerBtn}>{linked ? "Revoke Access" : "Grant Access"}</Text>
+                            </TouchableOpacity>
+                        );
+                    } )}
+
                 </View>
-                <Text style={styles.revoke}>REVOKE ACCESS</Text>
+                
                 
                 <Button mode="text" onPress={signOut} icon={"logout"}>Sign out</Button>
     </View>
@@ -415,19 +437,14 @@ const styles = StyleSheet.create({
     subHeader: { fontWeight: "800", marginTop: 10 },
     reportLine: { fontWeight: "600", marginTop: 4 },
 
-    reportBtn: {
-        marginTop: 12,
-        backgroundColor: "#c6c6c6",
-        paddingVertical: 12,
-        borderRadius: 12,
-        alignItems: "center",
-    },
-    
-    reportBtnText: {
-        fontWeight: "800",
-        letterSpacing: 0.5,
-    },
+    reportBtn: { marginTop: 12,backgroundColor: "#c6c6c6",paddingVertical: 12,borderRadius: 12,alignItems: "center",}, 
+    reportBtnText: {fontWeight: "800",letterSpacing: 0.5,},
 
     subText: { fontWeight: "600" },
     revoke: { textAlign: "center", fontWeight: "800", marginTop: 10 },
+
+    providerRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8 },
+    providerName: { fontWeight: "700" },
+    providerBtn: { fontWeight: "800" },
+
 });

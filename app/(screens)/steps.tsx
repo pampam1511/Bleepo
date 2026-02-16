@@ -406,10 +406,5 @@ const styles = StyleSheet.create({
   togglePill: {backgroundColor: "#cfcfcf",borderRadius: 14,paddingHorizontal: 14,paddingVertical: 6,},
   toggleActive: {borderWidth: 1,borderColor: "#000"},
   toggleText: {fontWeight: "700",fontSize: 11},
-  
-  
-  
 
-
-  
 });
