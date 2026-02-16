@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-//rimport { BarCodeScanner } from "expo-barcode-scanner";
+import {CameraView, Camera} from "expo-camera"
+//import { BarCodeScanner } from "expo-barcode-scanner";
 
 type FilterKey = "lowGlycaemic" | "halal" | "glutenFree";
 
@@ -18,19 +19,21 @@ export default function RecipeScreen() {
     halal: false,
     glutenFree: false,
   });
-
-  const [scanVisible, setScanVisible] = useState(false);
+  const [manualVisible, setManualVisible] = useState(false);
+  const [manualFood, setManualFood] = useState({name:"", calories:"",protein:"",carbs:"",fat:"",});
+  const [scanResult, setScanResult] = useState<any | null>(null);
+  const [isScanning, setIsScanning] = useState(true);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scannedCode, setScannedCode] = useState<string | null>(null);
+ 
 
-  // Request camera permission once
+  //request permision for camera
   useEffect(() => {
     (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     })();
   }, []);
-
+  
   const toggleFilter = (key: FilterKey) => {
     setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
   };

@@ -5,6 +5,8 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ProfileProvider } from "@/lib/profile-context";
+import { ProviderAccessProvider } from "@/lib/provider-access-context";
+import { CommunityProvider } from "@/lib/community-context";
 
 function RootLayoutC() {
   const router = useRouter();
@@ -43,10 +45,14 @@ export default function RootLayout() {
   return(
     <AuthProvider>
       <HealthProvider>
-      <ProfileProvider>       
+      <ProfileProvider>
+      <ProviderAccessProvider>
+        <CommunityProvider>      
       <SafeAreaProvider>
       <RootLayoutC />
       </SafeAreaProvider>
+      </CommunityProvider> 
+      </ProviderAccessProvider>
       </ProfileProvider> 
       </HealthProvider>
     </AuthProvider>

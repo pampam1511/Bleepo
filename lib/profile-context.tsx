@@ -11,6 +11,7 @@ type ProfileContextType = {
         heightCm: number;
         weightKg: number ;
         weightGoalKg: number;
+        dataSharing: boolean;
     }) => Promise<void>;
 };
 
@@ -29,10 +30,12 @@ export function ProfileProvider({ children}: { children: React.ReactNode}) {
         heightCm,
         weightKg,
         weightGoalKg,
+        dataSharing,
     }: {
         heightCm: number;
         weightKg: number;
         weightGoalKg: number;
+        dataSharing: boolean;
     }) =>{ 
         const user = await account.get();
         
@@ -45,6 +48,7 @@ export function ProfileProvider({ children}: { children: React.ReactNode}) {
             heightCm,
             weightKg,
             weightGoalKg,
+            dataSharing,
             updatedAt: new Date().toISOString(),
         };
 
