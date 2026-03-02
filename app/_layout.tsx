@@ -1,12 +1,12 @@
 // app/_layout.tsx
 import { AuthProvider, useAuth } from "@/lib/auth-context";
-import { HealthProvider } from "@/lib/health-context";
+import { CommunityProvider } from "@/lib/community-context";
+import { HealthProvider } from "@/lib/health /health-context";
+import { ProfileProvider } from "@/lib/profile-context";
+import { ProviderReportProvider } from "@/lib/provider-access-context";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { ProfileProvider } from "@/lib/profile-context";
-import { ProviderAccessProvider } from "@/lib/provider-access-context";
-import { CommunityProvider } from "@/lib/community-context";
 
 function RootLayoutC() {
   const router = useRouter();
@@ -15,6 +15,7 @@ function RootLayoutC() {
   const segments = useSegments()
 
   useEffect(() => {
+    if(isLoadingUser) return;
   
 
     const inAuthGroup = segments[0] === "auth";
@@ -23,14 +24,12 @@ function RootLayoutC() {
     if (!user && !inAuthGroup && !isLoadingUser) {
       router.replace("/auth");
     }else if (user && inAuthGroup && !isLoadingUser) {
-      router.replace("/");
+      router.replace("/(tabs)");
 
     }
   
     //return () => clearTimeout(timerId);
-  }, [user, segments]);
-
- 
+  }, [user,isLoadingUser]);
 
   return (
     <Stack>
@@ -44,16 +43,16 @@ function RootLayoutC() {
 export default function RootLayout() {
   return(
     <AuthProvider>
-      <HealthProvider>
-      <ProfileProvider>
-      <ProviderAccessProvider>
-        <CommunityProvider>      
-      <SafeAreaProvider>
-      <RootLayoutC />
-      </SafeAreaProvider>
-      </CommunityProvider> 
-      </ProviderAccessProvider>
-      </ProfileProvider> 
+        <HealthProvider>
+          <ProfileProvider>
+            <ProviderReportProvider >
+              <CommunityProvider>      
+                <SafeAreaProvider>
+                  <RootLayoutC />
+                </SafeAreaProvider>
+              </CommunityProvider> 
+            </ProviderReportProvider>
+          </ProfileProvider> 
       </HealthProvider>
     </AuthProvider>
   );

@@ -1,9 +1,8 @@
 import { createContext, useContext } from 'react';
 import {ID, Query, Permission, Role } from 'react-native-appwrite';
-import { databases, account } from './appwrite';
+import { databases, account, DATABASE_ID, USER_PROFILE_COLLECTION_ID } from './appwrite';
 
-const DB_ID = "697ceba5002b026d89f2";
-const USER_PROFILE = "user_profile";
+
 
 type ProfileContextType = {
     getUserProfile: () => Promise<any | null>;
@@ -20,7 +19,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export function ProfileProvider({ children}: { children: React.ReactNode}) {
     const getUserProfile = async () => {
         const user = await account.get();
-        const res = await databases.listDocuments(DB_ID, USER_PROFILE, [ 
+        const res = await databases.listDocuments(DATABASE_ID, USER_PROFILE_COLLECTION_ID, [ 
             Query.equal('userId', user.$id),
         ]);
         return res.documents[0] ?? null;
@@ -39,7 +38,7 @@ export function ProfileProvider({ children}: { children: React.ReactNode}) {
     }) =>{ 
         const user = await account.get();
         
-        const existing = await databases.listDocuments(DB_ID, USER_PROFILE, [ 
+        const existing = await databases.listDocuments(DATABASE_ID, USER_PROFILE_COLLECTION_ID, [ 
             Query.equal('userId', user.$id),
         ]);
 
@@ -53,9 +52,9 @@ export function ProfileProvider({ children}: { children: React.ReactNode}) {
         };
 
         if (existing.documents.length > 0) { 
-            await databases.updateDocument(DB_ID, USER_PROFILE, existing.documents[0].$id, payload); 
+            await databases.updateDocument(DATABASE_ID, USER_PROFILE_COLLECTION_ID, existing.documents[0].$id, payload); 
         } else {
-            await databases.createDocument(DB_ID, USER_PROFILE, ID.unique(), payload, [
+            await databases.createDocument(DATABASE_ID, USER_PROFILE_COLLECTION_ID, ID.unique(), payload, [
                 Permission.read(Role.user(user.$id)),
                 Permission.update(Role.user(user.$id)),
                 Permission.delete(Role.user(user.$id)),

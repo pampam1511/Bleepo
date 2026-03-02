@@ -9,6 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier":"com.PamelaF.Bleepo",
       "supportsTablet": true
     },
     "android": {
