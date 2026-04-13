@@ -1,12 +1,13 @@
-import { Account, Client, Databases } from 'react-native-appwrite';
+import { Account, Client, Databases, Storage } from 'react-native-appwrite';
 
 export const client = new Client()
 .setEndpoint(process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!)
 .setProject(process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!)
 .setPlatform(process.env.EXPO_PUBLIC_APPWRITE_PLATFORM!)
+export const account = new Account(client);
 
 export const databases = new Databases(client);
-export const account = new Account(client);
+export const storage = new Storage(client);
 
 export const DATABASE_ID = process.env.EXPO_PUBLIC_DB_ID!;
 export const HEALTHLOG_COLLECTION_ID = 
@@ -33,4 +34,8 @@ export const COMMUNITY_PROFILES_COLLECTION_ID =process.env.EXPO_PUBLIC_COMMUNITY
 export const PROVIDER_ACCESS =process.env.EXPO_PUBLIC_PROVIDER_ACCESS_COLLECTION_ID!;
 export const SHARED_REPORTS =process.env.EXPO_PUBLIC_SHARED_REPORTS_COLLECTION_ID!;
 
+export const RECIPES = process.env.EXPO_PUBLIC_RECIPES_COLLECTION_ID!;
+export const RECIPE_INGREDIENTS= process.env.EXPO_PUBLIC_RECIPE_INGREDIENTS_COLLECTION_ID!;
+export const RECIPE_FAVORITES= process.env.EXPO_PUBLIC_RECIPE_FAVORITES_COLLECTION_ID!;
+export const RECIPE_IMAGES_BUCKET_ID = process.env.EXPO_PUBLIC_RECIPE_IMAGES_BUCKET_ID!;
 

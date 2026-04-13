@@ -1,11 +1,5 @@
 import { ID, Permission, Query, Role } from "react-native-appwrite";
-import {
-  account,
-  databases,
-  DATABASE_ID,
-  CALORIE_GOALS_COLLECTION_ID,
-  NUTRITION_LOGS_COLLECTION_ID,
-} from "@/lib/appwrite";
+import {account,databases,DATABASE_ID,CALORIE_GOALS_COLLECTION_ID,NUTRITION_LOGS_COLLECTION_ID,} from "@/lib/appwrite";
 
 export async function getTodayCalories() {
   const user = await account.get();

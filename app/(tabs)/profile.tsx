@@ -246,31 +246,6 @@ export default function profileScreen() {
           </TouchableOpacity>
         </AccordionCard>
 
-        {/* ── Data Sharing ── */}
-        <View style={s.card}>
-          <LinearGradient colors={[C.mint, "#B8EAD8"]} style={s.cardHeader}>
-            <View style={s.cardHeaderLeft}>
-              <Text style={s.cardTitle}>Data Sharing</Text>
-            </View>
-          </LinearGradient>
-          <View style={s.cardBody}>
-            <Text style={s.mutedText}>Allow providers to view your health data.</Text>
-            <View style={s.toggleRow}>
-              {(["YES", "NO"] as const).map((v) => {
-                const active = dataSharing === (v === "YES");
-                return (
-                  <TouchableOpacity key={v} onPress={() => setDataSharing(v === "YES")}
-                    style={[s.togglePill, active && s.togglePillActive]}>
-                    <Text style={[s.togglePillText, active && s.togglePillTextActive]}>
-                      {v === "YES" ? "✓  Yes" : "✗  No"}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        </View>
-
         {/* ── Health Reports ── */}
         <AccordionCard title="Health Reports" emoji=""
           gradient={[C.lavender, "#E8C9F5"]}
@@ -311,13 +286,6 @@ export default function profileScreen() {
           </TouchableOpacity>
         </AccordionCard>
 
-        {/* ── Share with Providers ── */}
-        <TouchableOpacity style={s.primaryBtn} onPress={onShareReport}>
-          <LinearGradient colors={[C.rose, C.roseDark]} style={s.primaryBtnInner}>
-            <Ionicons name="share-social-outline" size={17} color={C.white} />
-            <Text style={s.primaryBtnText}>Share with Providers</Text>
-          </LinearGradient>
-        </TouchableOpacity>
 
         {/* ── Linked Healthcare Providers ── */}
         <View style={[s.card, { marginTop: 14 }]}>

@@ -131,7 +131,7 @@ export async function saveHealthLog(params: {
 const DEFAULT_CYCLE_LENGTH = 28;
 
 // Uses log.date (one entry per day the user logged) to build streaks.
-// e.g. 5 logs on Feb 22–26 = one streak of 5 days = avgLength 5. ✅
+// e.g. 5 logs on Feb 22–26 = one streak of 5 days = avgLength 5. 
 export function computePeriodStats(logs: any[]) {
   const todayKey = toLocalDayKey(new Date());
 

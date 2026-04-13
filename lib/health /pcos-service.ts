@@ -1,10 +1,6 @@
-import { ID, Query, Permission, Role } from "react-native-appwrite";
-import { account, databases, DATABASE_ID } from "@/lib/appwrite";
+import { account, DATABASE_ID, databases, PCOS_LOGS_COLLECTION_ID } from "@/lib/appwrite";
+import { ID, Permission, Query, Role } from "react-native-appwrite";
 
-// ─── Collection IDs ───────────────────────────────────────────────────────────
-const PCOS_LOGS_COLLECTION_ID   = process.env.EXPO_PUBLIC_PCOS_LOGS_COLLECTION_ID!;
-const STEPS_DAILY_COLLECTION_ID = process.env.EXPO_PUBLIC_STEPS_DAILY_COLLECTION_ID!;
-const WEIGHT_LOGS_COLLECTION_ID = process.env.EXPO_PUBLIC_WEIGHT_LOGS_COLLECTION_ID!;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -170,55 +166,55 @@ export const getPCOSTrends = async (limitDays = 90): Promise<PCOSTrends> => {
 
   if (total === 0) {
     return {
-      totalLogs:        0,
-      avgPain:          0,
-      avgFatigue:       0,
-      avgBloating:      0,
-      avgStress:        0,
-      avgAppetite:      0,
-      dominantMood:     "😐",
+      totalLogs:0,
+      avgPain:0,
+      avgFatigue:0,
+      avgBloating:0,
+      avgStress:0,
+      avgAppetite:0,
+      dominantMood:"😐",
       symptomFrequency: {},
-      weeklyLoad:       [],
-      streak:           0,
-      insight:          "Keep logging to unlock personalised PCOS insights. Just 2 weeks of data reveals meaningful patterns.",
+      weeklyLoad: [],
+      streak: 0,
+      insight:"Keep logging to unlock personalised PCOS insights. Just 2 weeks of data reveals meaningful patterns.",
     };
   }
 
-  // ── Averages ────────────────────────────────────────────────────────────────
-  const avgPain     = avg(allLogs, "painLevel");
+  // Averages
+  const avgPain = avg(allLogs, "painLevel");
   const avgFatigue  = avg(allLogs, "fatigue");
   const avgBloating = avg(allLogs, "bloating");
-  const avgStress   = avg(allLogs, "stressLevel");
+  const avgStress = avg(allLogs, "stressLevel");
   const avgAppetite = avg(allLogs, "increased_appetite");
 
-  // ── Dominant mood ───────────────────────────────────────────────────────────
+  // Dominant mood 
   const moodCounts: Record<string, number> = {};
   allLogs.forEach((l) => {
     (l.moods ?? []).forEach((m: string) => { moodCounts[m] = (moodCounts[m] ?? 0) + 1; });
   });
   const dominantMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "😐";
 
-  // ── Symptom frequency (% of days) ──────────────────────────────────────────
+  //  Symptom frequency 
   const rawCounts: Record<string, number> = {
-    acne:            0,
-    hairloss:        0,
-    bloating:        0,
-    fatigue:         0,
-    cramps:          0,
-    moodswings:      0,
+    acne: 0,
+    hairloss: 0,
+    bloating: 0,
+    fatigue: 0,
+    cramps: 0,
+    moodswings: 0,
     irregularbleed:  0,
-    headache:        0,
+    headache: 0,
   };
 
   allLogs.forEach((l) => {
-    if (l.acne_levels && l.acne_levels !== "none")  rawCounts.acne++;
-    if (l.hairloss || l.facialhair)                  rawCounts.hairloss++;
-    if (l.bloating > 3)                              rawCounts.bloating++;
-    if (l.fatigue  > 3)                              rawCounts.fatigue++;
-    if (l.painLevel > 3)                             rawCounts.cramps++;
-    if (l.stressLevel > 3)                           rawCounts.moodswings++;
-    if (l.irregularBleeding)                         rawCounts.irregularbleed++;
-    if (l.headache)                                  rawCounts.headache++;
+    if (l.acne_levels && l.acne_levels !== "none") rawCounts.acne++;
+    if (l.hairloss || l.facialhair) rawCounts.hairloss++;
+    if (l.bloating > 0) rawCounts.bloating++;
+    if (l.fatigue  > 0) rawCounts.fatigue++;
+    if (l.painLevel > 0) rawCounts.cramps++;
+    if (l.stressLevel > 0) rawCounts.moodswings++;
+    if (l.irregularBleeding) rawCounts.irregularbleed++;
+    if (l.headache) rawCounts.headache++;
   });
 
   const symptomFrequency: Record<string, number> = {};
@@ -226,12 +222,12 @@ export const getPCOSTrends = async (limitDays = 90): Promise<PCOSTrends> => {
     symptomFrequency[k] = total > 0 ? Math.round((v / total) * 100) : 0;
   });
 
-  // ── Weekly load (last 8 weeks) ──────────────────────────────────────────────
+  //  Weekly load 
   const weeklyLoad: { label: string; count: number }[] = [];
   for (let i = 7; i >= 0; i--) {
-    const wEnd   = new Date(); wEnd.setDate(wEnd.getDate() - i * 7);
+    const wEnd = new Date(); wEnd.setDate(wEnd.getDate() - i * 7);
     const wStart = new Date(wEnd); wStart.setDate(wStart.getDate() - 6);
-    const label  = `W${8 - i}`;
+    const label = `W${8 - i}`;
 
     const weekLogs = allLogs.filter((l) => {
       const d = new Date(l.date);
@@ -241,19 +237,19 @@ export const getPCOSTrends = async (limitDays = 90): Promise<PCOSTrends> => {
     const count = weekLogs.reduce((s, l) => {
       let c = 0;
       if (l.acne_levels && l.acne_levels !== "none") c++;
-      if (l.fatigue  > 3)    c++;
-      if (l.bloating > 3)    c++;
-      if (l.facialhair)      c++;
+      if (l.fatigue  > 3) c++;
+      if (l.bloating > 3) c++;
+      if (l.facialhair) c++;
       if (l.stressLevel > 3) c++;
       if (l.irregularBleeding) c++;
-      if (l.headache)        c++;
+      if (l.headache) c++;
       return s + c;
     }, 0);
 
     weeklyLoad.push({ label, count });
   }
 
-  // ── Streak (consecutive logged days ending today) ───────────────────────────
+  //  Streak  logged days ending today
   const loggedDayKeys = new Set(allLogs.map((l) => toDateKey(l.date)));
   let streak = 0;
   const cursor = new Date();

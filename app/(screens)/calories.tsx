@@ -2,22 +2,12 @@ import { useHealth } from "@/lib/health /health-context";
 import { useProfile } from "@/lib/profile-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  Dimensions,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import {Dimensions,Modal,Pressable,ScrollView,StyleSheet,Text,TextInput,TouchableOpacity,View,} from "react-native";
 
 const SCREEN_W = Dimensions.get("window").width;
 const STEP_PER_KCAL = 20;
 
-// ─── Colour palette (matches your profile screen) ───────────────────────────
+// Colour palette 
 const C = {blush:     "#FADADD", roseLight: "#F9C5C9", rose:      "#E8929A",  roseDark:  "#C45C6A",
           lavender:  "#EDD9F5",  lavDark:   "#B07CC6", peach:     "#FAE5D3",  peachDark: "#E8A87C", 
           mint:      "#D4F0E8", mintDark:  "#6BBFA3",  cream:     "#FFF8F5",  white:     "#FFFFFF",
@@ -35,40 +25,7 @@ function bmiColor(bmi: number) {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-/** Horizontal filled progress bar */
-function NutritionBar({label,value,goal,color,unit = "g",
-}: {
-  label: string;
-  value: number;
-  goal: number;
-  color: string;
-  unit?: string;
-}) {
-  const pct = goal > 0 ? Math.min(1, value / goal) : 0;
-  return (
-    <View style={nb.row}>
-      <Text style={nb.label}>{label}</Text>
-      <View style={nb.trackWrap}>
-        <View style={nb.track}>
-          <View style={[nb.fill, { width: `${Math.round(pct * 100)}%`, backgroundColor: color }]} />
-        </View>
-        <Text style={nb.nums}>
-          {value}
-          <Text style={nb.goal}>/{goal}{unit}</Text>
-        </Text>
-      </View>
-    </View>
-  );
-}
-const nb = StyleSheet.create({
-  row:      { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  label:    { width: 64, fontSize: 12, fontWeight: "700", color: C.textMid },
-  trackWrap:{ flex: 1 },
-  track:    { height: 10, backgroundColor: "#F0D5DA", borderRadius: 8, overflow: "hidden", marginBottom: 3 },
-  fill:     { height: 10, borderRadius: 8 },
-  nums:     { fontSize: 11, fontWeight: "700", color: C.textDark },
-  goal:     { fontWeight: "400", color: C.textLight },
-});
+
 
 /** Mini circular arc-style calorie indicator (View-only, no SVG) */
 function CalCircle({current,goal,size = 96,label,
@@ -319,8 +276,6 @@ export default function CalorieScreen() {
   const {
     getTodayCalories,
     saveTodayCalories,
-    getTodayNutrition,
-    saveTodayNutrition,
     getStepsDaily,
     getWeightLogs,
     logWeight,
@@ -337,13 +292,7 @@ export default function CalorieScreen() {
   const [burnedGoal,    setBurnedGoal]    = useState("500");
   const [burnedSource,  setBurnedSource]  = useState<"steps" | "manual">("steps");
 
-  // ── Nutrition state ──
-  const [carbs,       setCarbs]       = useState("0");
-  const [fat,         setFat]         = useState("0");
-  const [protein,     setProtein]     = useState("0");
-  const [carbsGoal,   setCarbsGoal]   = useState("250");
-  const [fatGoal,     setFatGoal]     = useState("65");
-  const [proteinGoal, setProteinGoal] = useState("150");
+ 
 
   // ── Weight / BMI state ──
   const [weightLogs,   setWeightLogs]   = useState<any[]>([]);
@@ -354,7 +303,6 @@ export default function CalorieScreen() {
   // ── Modal visibility ──
   const [intakeModal,    setIntakeModal]    = useState(false);
   const [burnedModal,    setBurnedModal]    = useState(false);
-  const [nutritionModal, setNutritionModal] = useState(false);
   const [weightModal,    setWeightModal]    = useState(false);
 
   // ── Derived ──
@@ -371,9 +319,8 @@ export default function CalorieScreen() {
       const start = new Date(); start.setHours(0, 0, 0, 0);
       const end   = new Date(); end.setHours(23, 59, 59, 999);
 
-      const [calDoc, nDoc, stepLogs, wLogs, profile] = await Promise.all([
+      const [calDoc,stepLogs, wLogs, profile] = await Promise.all([
         getTodayCalories(),
-        getTodayNutrition(),
         getStepsDaily(start, end),
         getWeightLogs(60),
         getUserProfile(),
@@ -383,10 +330,15 @@ export default function CalorieScreen() {
       if (profile) {
         setHeightCm(Number(profile.heightCm ?? 0));
         setWeightGoalKg(Number(profile.weightGoalKg ?? 0));
+        if (wLogs.length === 0 && profile.weightKg){
+          setWeightLogs([{date: new Date().toISOString(), weightKg: Number(profile.weightKg)}]);
+        } else{
+          // Weight logs
+          setWeightLogs(wLogs);
+        }
+        
       }
 
-      // Weight logs
-      setWeightLogs(wLogs);
 
       // Steps → auto burned calories
       const todaySteps  = stepLogs.reduce((s: number, x: any) => s + Number(x.steps ?? 0), 0);
@@ -433,20 +385,8 @@ export default function CalorieScreen() {
         });
       }
 
-      // Nutrition
-      if (nDoc) {
-        setCarbs(String(nDoc.carbs    ?? 0));
-        setFat(String(nDoc.fat        ?? 0));
-        setProtein(String(nDoc.protein ?? 0));
-        // Load goals if stored
-        if (nDoc.carbsGoal)   setCarbsGoal(String(nDoc.carbsGoal));
-        if (nDoc.fatGoal)     setFatGoal(String(nDoc.fatGoal));
-        if (nDoc.proteinGoal) setProteinGoal(String(nDoc.proteinGoal));
-      }
-    } catch (err) {
-      console.error("CalorieScreen loadAll failed:", err);
-    }
-  }, [getTodayCalories, getTodayNutrition, getStepsDaily, getWeightLogs, getUserProfile, saveTodayCalories]);
+    }catch(err){console.error("CalorieScreen loadAll failed:", err)}   
+  }, [getTodayCalories,  getStepsDaily, getWeightLogs, getUserProfile, saveTodayCalories]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
   useFocusEffect(useCallback(() => { loadAll(); }, [loadAll]));
@@ -477,17 +417,7 @@ export default function CalorieScreen() {
     setBurnedModal(false);
   };
 
-  const saveNutrition = async () => {
-    await saveTodayNutrition({
-      carbs:   Number(carbs   || 0),
-      fat:     Number(fat     || 0),
-      protein: Number(protein || 0),
-      carbsGoal:   Number(carbsGoal   || 0),
-      fatGoal:     Number(fatGoal     || 0),
-      proteinGoal: Number(proteinGoal || 0),
-    });
-    setNutritionModal(false);
-  };
+  
 
   const saveWeight = async () => {
     const w = parseFloat(newWeight);
@@ -499,7 +429,7 @@ export default function CalorieScreen() {
     setWeightLogs(fresh);
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
+ 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
@@ -547,14 +477,6 @@ export default function CalorieScreen() {
             <View style={[styles.scaleMarker, { left: `${Math.min(95, ((bmi - 10) / 35) * 100)}%` as any }]} />
           )}
         </View>
-      </SectionCard>
-
-      {/* ── Weight Progress ── */}
-      <SectionCard title="Weight Progress" emoji="">
-        <WeightChart logs={weightLogs} goalKg={weightGoalKg} />
-        <TouchableOpacity style={styles.addWeightBtn} onPress={() => setWeightModal(true)}>
-          <Text style={styles.addWeightTxt}>+ Log Weight</Text>
-        </TouchableOpacity>
       </SectionCard>
 
       {/* ── Calorie Intake ── */}
@@ -606,7 +528,7 @@ export default function CalorieScreen() {
               </View>
               <View style={styles.sourcePill}>
                 <Text style={styles.sourceTxt}>
-                  {burnedSource === "steps" ? "⚡ Auto from steps" : "✏️ Manual entry"}
+                  {burnedSource === "steps" ? "Auto from steps" : "Manual entry"}
                 </Text>
               </View>
             </View>
@@ -614,15 +536,7 @@ export default function CalorieScreen() {
         </SectionCard>
       </Pressable>
 
-      {/* ── Nutrition ── */}
-      <Pressable onPress={() => setNutritionModal(true)}>
-        <SectionCard title="Nutrition" emoji="">
-          <NutritionBar label="Carbs"   value={Number(carbs)}   goal={Number(carbsGoal)}   color={C.peachDark} />
-          <NutritionBar label="Fat"     value={Number(fat)}     goal={Number(fatGoal)}     color={C.lavDark}   />
-          <NutritionBar label="Protein" value={Number(protein)} goal={Number(proteinGoal)} color={C.mintDark}  />
-          <Text style={styles.tapHint}>Tap to update</Text>
-        </SectionCard>
-      </Pressable>
+     
 
       {/* ── Modals ── */}
 
@@ -648,21 +562,7 @@ export default function CalorieScreen() {
         <ModalField label="Burn Goal (kcal)"        value={burnedGoal}    onChange={setBurnedGoal}     />
       </FormModal>
 
-      {/* Nutrition modal */}
-      <FormModal
-        visible={nutritionModal}
-        title="Nutrition"
-        onClose={() => setNutritionModal(false)}
-        onSave={saveNutrition}
-      >
-        <ModalField label="Carbs (g)"         value={carbs}       onChange={setCarbs}       />
-        <ModalField label="Carbs Goal (g)"    value={carbsGoal}   onChange={setCarbsGoal}   />
-        <ModalField label="Fat (g)"           value={fat}         onChange={setFat}         />
-        <ModalField label="Fat Goal (g)"      value={fatGoal}     onChange={setFatGoal}     />
-        <ModalField label="Protein (g)"       value={protein}     onChange={setProtein}     />
-        <ModalField label="Protein Goal (g)"  value={proteinGoal} onChange={setProteinGoal} />
-      </FormModal>
-
+      
       {/* Weight modal */}
       <FormModal
         visible={weightModal}

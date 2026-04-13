@@ -1,8 +1,5 @@
 import { ID, Permission, Query, Role } from "react-native-appwrite";
-import { account, databases, DATABASE_ID } from "@/lib/appwrite";
-
-const WEIGHT_LOGS_COLLECTION_ID =
-  process.env.EXPO_PUBLIC_WEIGHT_LOGS_COLLECTION_ID ?? "weight_logs";
+import { account, databases, DATABASE_ID, WEIGHT_LOGS_COLLECTION_ID } from "@/lib/appwrite";
 
 export function calculateBMI(weightKg: number, heightCm: number): number {
   if (!heightCm || !weightKg) return 0;

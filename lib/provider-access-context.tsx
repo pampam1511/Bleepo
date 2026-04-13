@@ -63,7 +63,7 @@ export function ProviderReportProvider({ children }: { children: React.ReactNode
       DATABASE_ID, PROVIDER_ACCESS, ID.unique(), payload,
       [
         Permission.read(Role.user(user.$id)),
-        Permission.read(Role.user(providerId)),    // ✅ FIX: provider can read their own access record
+        Permission.read(Role.user(providerId)),    
         Permission.update(Role.user(user.$id)),
         Permission.delete(Role.user(user.$id)),
       ]

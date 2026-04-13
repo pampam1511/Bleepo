@@ -8,8 +8,8 @@ const SCREEN_W = Dimensions.get("window").width;
 const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 const stepsToDistanceKm = (steps: number) => steps * 0.0008;
-const stepsToCalories   = (steps: number) => steps * 0.04;
-const stepsToMinutes    = (steps: number) => steps / 100;
+const stepsToCalories= (steps: number) => steps * 0.04;
+const stepsToMinutes= (steps: number) => steps / 100;
 
 function startOfWeek(d: Date) {
   const copy = new Date(d);
@@ -38,13 +38,13 @@ export default function StepsScreen() {
     saveTodayCalories,
   } = useHealth();
 
-  const [selectedDay,      setSelectedDay]      = useState<string | null>(null);
-  const [mode,             setMode]             = useState<"DAILY" | "WEEKLY" | "MONTHLY">("DAILY");
-  const [dailyLogs,        setDailyLogs]        = useState<any[]>([]);
-  const [pastStepCount,    setPastStepCount]    = useState(0);
+  const [selectedDay,setSelectedDay]= useState<string | null>(null);
+  const [mode,setMode]= useState<"DAILY" | "WEEKLY" | "MONTHLY">("DAILY");
+  const [dailyLogs, setDailyLogs] = useState<any[]>([]);
+  const [pastStepCount, setPastStepCount]= useState(0);
   const [currentStepCount, setCurrentStepCount] = useState(0);
-  const [goal,             setGoal]             = useState("10000");
-  const [goalModal,        setGoalModal]        = useState(false);
+  const [goal,setGoal] = useState("10000");
+  const [goalModal,setGoalModal] = useState(false);
 
   // AppState handler always sees latest step count
   // without needing to be re-registered every time totalSteps changes
@@ -71,19 +71,19 @@ export default function StepsScreen() {
         const now = new Date();
         await saveStepsDaily(now, {
           steps,
-          timeMinutes:    Math.round(stepsToMinutes(steps)),
-          distanceKm:     Number(stepsToDistanceKm(steps).toFixed(2)),
+          timeMinutes: Math.round(stepsToMinutes(steps)),
+          distanceKm: Number(stepsToDistanceKm(steps).toFixed(2)),
           caloriesBurned: Math.round(stepsToCalories(steps)),
         });
 
         const calDoc = await getTodayCalories();
         await saveTodayCalories({
-          targetCalories: calDoc?.targetCalories      ?? 0,
-          dailyCalories:  calDoc?.dailyCaloriesIntake ?? 0,
+          targetCalories: calDoc?.targetCalories ?? 0,
+          dailyCalories: calDoc?.dailyCaloriesIntake ?? 0,
           burnedCalories: Math.round(stepsToCalories(steps)),
-          burnedGoal:     calDoc?.burnedGoal          ?? 0,
-          burnedSource:   "steps",
-          goalStatus:     calDoc?.goalStatus          ?? "active",
+          burnedGoal: calDoc?.burnedGoal ?? 0,
+          burnedSource: "steps",
+          goalStatus: calDoc?.goalStatus ?? "active",
         });
       } catch (err) {
         console.error("persistSteps failed:", err);
@@ -104,7 +104,7 @@ export default function StepsScreen() {
     }
   }, [getStepsDaily]);
 
-  // ── Pedometer setup ───────────────────────────────────────────────────────
+  // Pedometer setup 
   useEffect(() => {
     let sub: any;
     const subscribe = async () => {
@@ -128,14 +128,14 @@ export default function StepsScreen() {
     return () => { sub && sub.remove(); };
   }, []);
 
-  // ── Save on mount once pedometer data arrives ─────────────────────────────
+  //  Save on mount once pedometer data arrives 
   useEffect(() => {
     if (pastStepCount > 0) {
       persistSteps(pastStepCount + currentStepCount);
     }
   }, [pastStepCount]);
 
-  // ── Save every 5 minutes ──────────────────────────────────────────────────
+  // Save every 5 minutes
   useEffect(() => {
     const interval = setInterval(async () => {
       await persistSteps(totalStepsRef.current);
@@ -161,13 +161,10 @@ export default function StepsScreen() {
     return () => sub.remove();
   }, [persistSteps, loadDailyLogs]);
 
-  // ── Load logs + goal on mount ─────────────────────────────────────────────
+  // Load logs + goal on mount
   useEffect(() => { loadDailyLogs(); }, []);
 
-  // ── Backfill past 7 days from pedometer on first load ─────────────────────
-  // Runs once after dailyLogs first populates. Reads step counts for each of
-  // the last 7 days directly from the device (Apple Health on iOS) and saves
-  // any days that aren't already in Appwrite.
+  //directly from the device (Apple Health on iOS) and saves
   const hasBackfilled = useRef(false);
   useEffect(() => {
     if (hasBackfilled.current) return;   // only ever run once per session
@@ -196,9 +193,9 @@ export default function StepsScreen() {
             const result = await Pedometer.getStepCountAsync(dayStart, dayEnd);
             if (result.steps > 0) {
               await saveStepsDaily(dayStart, {
-                steps:          result.steps,
-                timeMinutes:    Math.round(stepsToMinutes(result.steps)),
-                distanceKm:     Number(stepsToDistanceKm(result.steps).toFixed(2)),
+                steps: result.steps,
+                timeMinutes: Math.round(stepsToMinutes(result.steps)),
+                distanceKm: Number(stepsToDistanceKm(result.steps).toFixed(2)),
                 caloriesBurned: Math.round(stepsToCalories(result.steps)),
               });
               didSaveAny = true;
@@ -231,9 +228,9 @@ export default function StepsScreen() {
     loadGoal();
   }, []);
 
-  // ── Derived values ────────────────────────────────────────────────────────
-  const goalNum      = Math.max(1, Number(goal || 0));
-  const progress     = Math.min(1, totalSteps / goalNum);
+  // Derived values 
+  const goalNum = Math.max(1, Number(goal || 0));
+  const progress = Math.min(1, totalSteps / goalNum);
   const progressWidth = Math.round(progress * 100);
 
   const selectedLog = useMemo(
@@ -243,21 +240,17 @@ export default function StepsScreen() {
 
   const displayStats = selectedLog
     ? {
-        steps:    selectedLog.steps         ?? 0,
-        time:     selectedLog.timeMinutes   ?? 0,
-        distance: selectedLog.distanceKm    ?? 0,
+        steps: selectedLog.steps ?? 0,
+        time: selectedLog.timeMinutes ?? 0,
+        distance: selectedLog.distanceKm ?? 0,
         calories: selectedLog.caloriesBurned ?? 0,
       }
-    : (() => {
-        const sorted = [...dailyLogs].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        const slice  = mode === "MONTHLY" ? sorted.slice(-30) : sorted.slice(-7);
-        return {
-          steps:    slice.reduce((s, x) => s + (x.steps         ?? 0), 0),
-          time:     slice.reduce((s, x) => s + (x.timeMinutes   ?? 0), 0),
-          distance: slice.reduce((s, x) => s + (x.distanceKm    ?? 0), 0),
-          calories: slice.reduce((s, x) => s + (x.caloriesBurned ?? 0), 0),
-        };
-      })();
+    : {
+      steps: totalSteps,
+      time: Math.round(stepsToMinutes(totalSteps)),
+      distance: Number(stepsToDistanceKm(totalSteps).toFixed(1)),
+      calories: Math.round(stepsToCalories(totalSteps)) ,
+      };
 
   const chartData = useMemo(() => {
     if (!dailyLogs.length) return { labels: [] as string[], values: [] as number[] };
@@ -295,7 +288,7 @@ export default function StepsScreen() {
 
   const maxBar = Math.max(...chartData.values, 1);
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  
   return (
     <View style={styles.screen}>
       <TouchableOpacity onPress={() => router.push("/")} style={styles.backBtn}>
@@ -318,19 +311,19 @@ export default function StepsScreen() {
         >
           {weekStarts.map((weekStart, idx) => {
             const days = Array.from({ length: 7 }).map((_, i) => {
-              const d   = new Date(weekStart);
+              const d = new Date(weekStart);
               d.setDate(weekStart.getDate() + i);
-              const y   = d.getFullYear();
-              const m   = String(d.getMonth() + 1).padStart(2, "0");
+              const y = d.getFullYear();
+              const m = String(d.getMonth() + 1).padStart(2, "0");
               const day = String(d.getDate()).padStart(2, "0");
-              const dateKey = `${y}-${m}-${day}`;
+              const dateKey = `${day}-${m}-${y}`;
               return { key: `${idx}-${i}-${dateKey}`, dateKey, label: WEEKDAY_LABELS[i], date: d.getDate() };
             });
             return (
               <View key={`week-${idx}`} style={styles.weekRow}>
                 {days.map((d) => {
-                  const selected  = selectedDay === d.dateKey;
-                  const hasLog    = dailyLogs.some((l) => l.date?.slice(0, 10) === d.dateKey);
+                  const selected = selectedDay === d.dateKey;
+                  const hasLog = dailyLogs.some((l) => l.date?.slice(0, 10) === d.dateKey);
                   return (
                     <TouchableOpacity key={d.key} onPress={() => setSelectedDay(d.dateKey)} style={styles.dayCol}>
                       <Text style={styles.dayLabel}>{d.label.slice(0, 1)}</Text>
@@ -363,7 +356,6 @@ export default function StepsScreen() {
               </Text>
             </View>
             <TouchableOpacity style={styles.goalPill} onPress={() => setGoalModal(true)}>
-              <Text style={styles.goalEmoji}>🎯</Text>
               <Text style={styles.goalNum}>{Number(goal).toLocaleString()}</Text>
               <Text style={styles.goalSub}>goal</Text>
             </TouchableOpacity>
@@ -380,12 +372,11 @@ export default function StepsScreen() {
 
           <View style={styles.statsRow}>
             {[
-              { emoji: "⏱️", value: `${Math.round(displayStats.time)}m`,        label: "Time"     },
-              { emoji: "📍", value: `${displayStats.distance.toFixed(1)}km`,     label: "Distance" },
-              { emoji: "🔥", value: `${Math.round(displayStats.calories)} kcal`, label: "Calories" },
+              {value: `${Math.round(displayStats.time)}m`,label: "Time"     },
+              {value: `${displayStats.distance.toFixed(1)}km`,label: "Distance" },
+              {value: `${Math.round(displayStats.calories)} kcal`,label: "Calories" },
             ].map((item) => (
               <View key={item.label} style={styles.statBox}>
-                <Text style={styles.statEmoji}>{item.emoji}</Text>
                 <Text style={styles.statValue}>{item.value}</Text>
                 <Text style={styles.statLabel}>{item.label}</Text>
               </View>
@@ -427,7 +418,7 @@ export default function StepsScreen() {
       <Modal visible={goalModal} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>🎯 Daily Step Goal</Text>
+            <Text style={styles.modalTitle}>Daily Step Goal</Text>
             <Text style={styles.modalSub}>How many steps do you want to hit each day?</Text>
             <TextInput
               style={styles.modalInput}
@@ -513,7 +504,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 9, fontWeight: "700", color: C.textLight, textTransform: "uppercase", letterSpacing: 0.3, marginTop: 2 },
 
   toggleRow: { flexDirection: "row", gap: 8, marginBottom: 18 },
-  togglePill:       { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: C.bg,
+  togglePill:{ flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: C.bg,
     alignItems: "center", borderWidth: 1.5, borderColor: C.border },
   toggleActive:     { backgroundColor: C.roseDark, borderColor: C.roseDark },
   toggleText: { fontWeight: "700", fontSize: 11, color: C.textMid },

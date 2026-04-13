@@ -18,14 +18,14 @@ import {
   saveStepsDaily,
   getStepsGoal,
   saveStepsGoal,
-} from "@/lib/health /step-service";
+} from "@/lib/health /step-service"
 import {
   logWeight,
   getWeightLogs,
   calculateBMI,
   bmiCategory,
 } from "@/lib/health /weight-service";
-import{
+import {
   savePCOSLog,
   getPCOSLog,
   getPCOSLogs,
@@ -34,12 +34,12 @@ import{
   type PCOSPayload,
   type PCOSLog,
   type PCOSTrends,
-}from "@/lib/health /pcos-service"
+} from "@/lib/health /pcos-service";
 
 type HealthContextType = {
   // Period
-  fetchMonthLogs: (date: Date) => Promise<any[]>;
-  fetchAllLogs: () => Promise<any[]>;
+  fetchMonthLogs:(date: Date) => Promise<any[]>;
+  fetchAllLogs:() => Promise<any[]>;
   getDetailLog: (healthLogId: string, type: "PERIOD" | "PCOS") => Promise<any>;
   saveHealthLog: (params: { date: string; type: "PERIOD" | "PCOS"; payload: any }) => Promise<void>;
   getPeriodStats: (logs: any[]) => {
@@ -49,46 +49,45 @@ type HealthContextType = {
     ovulationDate: Date | null;
     fertileStart: Date | null;
     fertileEnd: Date | null;
-    cycleRange: { early: Date; late: Date } | null;
+    cycleRange:{ early: Date; late: Date } | null;
   };
   // Calories
-  getTodayCalories: () => Promise<any | null>;
+  getTodayCalories:  () => Promise<any | null>;
   saveTodayCalories: (params: {
-    targetCalories: number;
+    targetCalories:number;
     dailyCalories: number;
     burnedCalories?: number;
     burnedGoal?: number;
     burnedSource?: "steps" | "manual";
-    goalStatus?: string;
+    goalStatus?:     string;
   }) => Promise<void>;
   getCaloriesRange: (start: Date, end: Date) => Promise<any[]>;
   // Nutrition
-  getTodayNutrition: () => Promise<any | null>;
+  getTodayNutrition:  () => Promise<any | null>;
   saveTodayNutrition: (params: {
     carbs: number;
     fat: number;
-    protein: number;
-    carbsGoal?: number;
-    fatGoal?: number;
+    protein:      number;
+    carbsGoal?:   number;
+    fatGoal?:     number;
     proteinGoal?: number;
   }) => Promise<void>;
   // Steps
-  getStepsDaily: (start: Date, end: Date) => Promise<any[]>;
+  getStepsDaily:  (start: Date, end: Date) => Promise<any[]>;
   saveStepsDaily: (date: Date, payload: any) => Promise<void>;
-  getStepsGoal: () => Promise<any | null>;
-  saveStepsGoal: (params: { targetSteps: number; goalStatus?: string }) => Promise<void>;
+  getStepsGoal:   () => Promise<any | null>;
+  saveStepsGoal:  (params: { targetSteps: number; goalStatus?: string }) => Promise<void>;
   // Weight
-  logWeight: (weightKg: number, heightCm: number, note?: string) => Promise<void>;
+  logWeight:     (weightKg: number, heightCm: number, note?: string) => Promise<void>;
   getWeightLogs: (limitDays?: number) => Promise<any[]>;
-  calculateBMI: (weightKg: number, heightCm: number) => number;
-  bmiCategory: (bmi: number) => string;
-  //PCOS
+  calculateBMI:  (weightKg: number, heightCm: number) => number;
+  bmiCategory:   (bmi: number) => string;
+  // PCOS
   savePCOSLog:   (date: string, payload: PCOSPayload) => Promise<void>;
   getPCOSLog:    (date: string) => Promise<PCOSLog | null>;
   getPCOSLogs:   (startDate: Date, endDate: Date) => Promise<PCOSLog[]>;
   getPCOSTrends: (limitDays?: number) => Promise<PCOSTrends>;
   getPCOSStreak: () => Promise<number>;
-
 };
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
@@ -97,24 +96,30 @@ export function HealthProvider({ children }: { children: React.ReactNode }) {
   return (
     <HealthContext.Provider
       value={{
+        // Period
         fetchMonthLogs,
         fetchAllLogs,
         getDetailLog,
         saveHealthLog,
-        getPeriodStats: computePeriodStats,
+        getPeriodStats:computePeriodStats,
+        // Calories
         getTodayCalories,
         saveTodayCalories,
         getCaloriesRange,
+        // Nutrition
         getTodayNutrition,
         saveTodayNutrition,
+        // Steps
         getStepsDaily,
         saveStepsDaily,
         getStepsGoal,
         saveStepsGoal,
+        // Weight
         logWeight,
         getWeightLogs,
         calculateBMI,
         bmiCategory,
+        // PCOS
         savePCOSLog,
         getPCOSLog,
         getPCOSLogs,

@@ -2,7 +2,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useProviderReport } from "@/lib/provider-access-context";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useState } from "react";
-import {ActivityIndicator,ScrollView,StyleSheet,Text,TouchableOpacity,View,} from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 
 const C = { 
   cream:"#FFF8F5", white: "#FFFFFF", rose:"#E8929A", roseDark: "#C45C6A",
@@ -12,13 +12,12 @@ const C = {
   
   type GradientColors = [string, string, ...string[]];
 
-function SectionCard({ title, emoji, children, gradient }: {
-  title: string; emoji: string; children: React.ReactNode; gradient?:GradientColors;
+function SectionCard({ title,  children, gradient }: {
+  title: string;  children: React.ReactNode; gradient?:GradientColors;
 }) {
   return (
     <View style={sc.card}>
       <LinearGradient colors={gradient ?? (["#FDE8ED", C.blush] as [string,string])} style={sc.header}>
-        <Text style={sc.emoji}>{emoji}</Text>
         <Text style={sc.title}>{title}</Text>
       </LinearGradient>
       <View style={sc.body}>{children}</View>
@@ -121,7 +120,7 @@ export default function ProviderReportsScreen() {
         </View>
 
         {/* Patient selector */}
-        <SectionCard title="My Patients" emoji="👥" gradient={[C.mint, "#B8EAD8"]}>
+        <SectionCard title="My Patients"  gradient={[C.mint, "#B8EAD8"]}>
           {patients.length === 0 ? (
             <Text style={styles.muted}>No patients have shared reports with you yet.</Text>
           ) : (
@@ -144,7 +143,6 @@ export default function ProviderReportsScreen() {
         {/* Reports */}
         {visibleReports.length === 0 && !loading && (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>📋</Text>
             <Text style={styles.muted}>No reports found for this patient.</Text>
           </View>
         )}
@@ -168,7 +166,7 @@ export default function ProviderReportsScreen() {
             <View key={r.$id} style={styles.reportBlock}>
 
               {/* ── Activity ── */}
-              <SectionCard title="Activity" emoji="👟" gradient={[C.peach, "#F5D5B8"]}>
+              <SectionCard title="Activity" gradient={[C.peach, "#F5D5B8"]}>
                 <DataRow label="Total Steps"       value={(p.stepsTotal ?? 0).toLocaleString()} />
                 <DataRow label="Avg Steps / Day"   value={(p.stepsAvgPerDay ?? 0).toLocaleString()} />
                 <DataRow label="Active Days"        value={p.activeDays ?? "—"} />
@@ -177,7 +175,7 @@ export default function ProviderReportsScreen() {
               </SectionCard>
 
               {/* ── Nutrition ── */}
-              <SectionCard title="Nutrition" emoji="🥗" gradient={[C.mint, "#B8EAD8"]}>
+              <SectionCard title="Nutrition"  gradient={[C.mint, "#B8EAD8"]}>
                 <DataRow label="Calorie Intake"     value={`${p.calIntakeTotal ?? 0} kcal`} />
                 <DataRow label="Calorie Goal"        value={`${p.calGoal ?? 0} kcal`} />
                 <DataRow label="Avg Protein / Day"  value={`${p.proteinAvg ?? 0}g`} />
@@ -187,7 +185,7 @@ export default function ProviderReportsScreen() {
 
               {/* ── Weight ── */}
               {(p.weightKg || p.weightGoalKg) && (
-                <SectionCard title="Weight" emoji="⚖️" gradient={[C.lavender, "#E2C8F0"]}>
+                <SectionCard title="Weight" gradient={[C.lavender, "#E2C8F0"]}>
                   <DataRow label="Current Weight"  value={p.weightKg ? `${p.weightKg} kg` : "—"} />
                   <DataRow label="Weight Goal"     value={p.weightGoalKg ? `${p.weightGoalKg} kg` : "—"} />
                   <DataRow label="BMI"             value={p.bmi ?? "—"} />
@@ -195,7 +193,7 @@ export default function ProviderReportsScreen() {
               )}
 
               {/* ── Menstrual / Period symptoms ── */}
-              <SectionCard title="Menstrual Health" emoji="🌸" gradient={["#FDE8ED", C.blush]}>
+              <SectionCard title="Menstrual Health"  gradient={["#FDE8ED", C.blush]}>
                 <DataRow label="Cycle Length"      value={p.cycleLength      ? `${p.cycleLength} days`  : "—"} />
                 <DataRow label="Period Length"     value={p.periodLength     ? `${p.periodLength} days` : "—"} />
                 <DataRow label="Flow Intensity"    value={p.flowIntensity    ?? "—"} />
@@ -216,7 +214,7 @@ export default function ProviderReportsScreen() {
 
               {/* ── PCOS symptoms ── */}
               {(pcosSymptoms.length > 0 || p.pcosRisk) && (
-                <SectionCard title="PCOS Indicators" emoji="🔬" gradient={["#F3E8FD", C.lavender]}>
+                <SectionCard title="PCOS Indicators" gradient={["#F3E8FD", C.lavender]}>
                   {p.pcosRisk && <DataRow label="Risk Level" value={p.pcosRisk} />}
                   {pcosSymptoms.length > 0 && (
                     <View style={styles.symptomSection}>
@@ -231,7 +229,7 @@ export default function ProviderReportsScreen() {
 
               {/* ── Mood & general notes ── */}
               {(p.moodAvg || p.notes) && (
-                <SectionCard title="Mood & Notes" emoji="💭" gradient={[C.peach, "#FAD8C0"]}>
+                <SectionCard title="Mood & Notes"  gradient={[C.peach, "#FAD8C0"]}>
                   {p.moodAvg   && <DataRow label="Avg Mood Score" value={`${p.moodAvg} / 10`} />}
                   {p.notes     && <Text style={styles.notes}>{p.notes}</Text>}
                 </SectionCard>

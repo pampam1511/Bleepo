@@ -165,7 +165,7 @@ export default function Index() {
 
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.greeting}>Hi {name} 👋</Text>
+          <Text style={styles.greeting}>Hi {name}</Text>
           <Text style={styles.subtitle}>Here's your daily summary</Text>
         </View>
       </View>
