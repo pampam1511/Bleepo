@@ -43,7 +43,7 @@ return (
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             >
-                <Text style={s.title}> Welcome to BLOOPY!!!</Text>
+                <Text style={s.title}>Welcome to BLOOPY!!!</Text>
 
             {/*  Big card */}
                 <LinearGradient colors={[C.blush, "#FDE8ED"]} style={s.card}>

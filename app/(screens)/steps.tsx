@@ -29,15 +29,7 @@ function getPastWeekStarts(count: number): Date[] {
 
 export default function StepsScreen() {
   const router = useRouter();
-  const {
-    getStepsDaily,
-    getStepsGoal,
-    saveStepsGoal,
-    saveStepsDaily,
-    getTodayCalories,
-    saveTodayCalories,
-  } = useHealth();
-
+  const {getStepsDaily,getStepsGoal,saveStepsGoal,saveStepsDaily,getTodayCalories,saveTodayCalories,} = useHealth();
   const [selectedDay,setSelectedDay]= useState<string | null>(null);
   const [mode,setMode]= useState<"DAILY" | "WEEKLY" | "MONTHLY">("DAILY");
   const [dailyLogs, setDailyLogs] = useState<any[]>([]);
@@ -238,6 +230,9 @@ export default function StepsScreen() {
     [dailyLogs, selectedDay]
   );
 
+
+  // If a day is selected from the week strip, show that day's saved log values.
+  // Otherwise fall back to live totals calculated from the pedometer.
   const displayStats = selectedLog
     ? {
         steps: selectedLog.steps ?? 0,
@@ -264,7 +259,8 @@ export default function StepsScreen() {
         values: last7.map((l) => l.steps ?? 0),
       };
     }
-
+    // Group the last 28 days into week buckets keyed by their week start date,
+    // then take the 4 most recent weeks for display
     if (mode === "WEEKLY") {
       const weekTotals: Record<string, number> = {};
       sorted.slice(-28).forEach((l) => {
@@ -277,7 +273,7 @@ export default function StepsScreen() {
         values: weeks.map(([, v]) => v),
       };
     }
-
+    // MONTHLY — bucket every log entry into its calendar month (0–11
     const months = Array(12).fill(0);
     sorted.forEach((l) => { months[new Date(l.date).getMonth()] += l.steps ?? 0; });
     return {
@@ -310,9 +306,11 @@ export default function StepsScreen() {
           scrollEventThrottle={16}
         >
           {weekStarts.map((weekStart, idx) => {
+            // Build an array of 7 day objects for this week (Sun → Sat)
             const days = Array.from({ length: 7 }).map((_, i) => {
               const d = new Date(weekStart);
               d.setDate(weekStart.getDate() + i);
+              // Format date key as DD-MM-YYYY to match the format used in dailyLogs
               const y = d.getFullYear();
               const m = String(d.getMonth() + 1).padStart(2, "0");
               const day = String(d.getDate()).padStart(2, "0");
@@ -323,6 +321,7 @@ export default function StepsScreen() {
               <View key={`week-${idx}`} style={styles.weekRow}>
                 {days.map((d) => {
                   const selected = selectedDay === d.dateKey;
+                  // Check if this day has a log entry to determine if we should show the dot indicator
                   const hasLog = dailyLogs.some((l) => l.date?.slice(0, 10) === d.dateKey);
                   return (
                     <TouchableOpacity key={d.key} onPress={() => setSelectedDay(d.dateKey)} style={styles.dayCol}>
@@ -451,7 +450,7 @@ export default function StepsScreen() {
 const C = {
   bg: "#FFF8F5", white: "#FFFFFF", rose: "#E8929A",roseDark:"#C45C6A",
   roseLight: "#F9C5C9", blush: "#FADADD",mint: "#D4F0E8",
-  mintDark:  "#6BBFA3",textDark: "#3D2030",textMid: "#7A4F5A",
+  mintDark: "#6BBFA3",textDark: "#3D2030",textMid: "#7A4F5A",
   textLight: "#B08090",border:"#F0D5DA",
 };
 
@@ -476,8 +475,7 @@ const styles = StyleSheet.create({
   dayNumSelected: { color: C.white },
   logDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: C.rose, marginTop: 2 },
 
-  card: { backgroundColor: C.white, borderRadius: 22, padding: 18, marginBottom: 14,
-    shadowColor: C.rose, shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 2 }, elevation: 3,
+  card: { backgroundColor: C.white, borderRadius: 22, padding: 18, marginBottom: 14,shadowColor: C.rose, shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 2 }, elevation: 3,
     borderWidth: 1, borderColor: C.border },
   cardTitle: { fontSize: 14, fontWeight: "800", color: C.textDark, marginBottom: 14, textTransform: "uppercase", letterSpacing: 0.5 },
 
@@ -485,47 +483,42 @@ const styles = StyleSheet.create({
   stepsValue: { fontSize: 44, fontWeight: "900", color: C.textDark },
   stepsLabel: { fontSize: 10, fontWeight: "700", color: C.textLight, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2 },
 
-  goalPill: { backgroundColor: C.blush, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10,
-    alignItems: "center", borderWidth: 1.5, borderColor: C.roseLight },
+  goalPill: { backgroundColor: C.blush, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10,alignItems: "center", borderWidth: 1.5, borderColor: C.roseLight },
   goalEmoji: { fontSize: 20, marginBottom: 2 },
   goalNum: { fontSize: 17, fontWeight: "900", color: C.roseDark },
   goalSub: { fontSize: 9, fontWeight: "700", color: C.textLight, textTransform: "uppercase" },
 
   progressWrap:  { marginBottom: 18 },
   progressTrack: { height: 10, backgroundColor: C.blush, borderRadius: 8, overflow: "hidden", marginBottom: 5 },
-  progressFill:  { height: 10, backgroundColor: C.roseDark, borderRadius: 8 },
-  progressLbl:   { fontSize: 11, color: C.textLight, fontWeight: "600", textAlign: "right" },
+  progressFill: { height: 10, backgroundColor: C.roseDark, borderRadius: 8 },
+  progressLbl: {fontSize: 11, color: C.textLight, fontWeight: "600", textAlign: "right" },
 
-  statsRow:  { flexDirection: "row", gap: 10 },
-  statBox:   { flex: 1, backgroundColor: C.bg, borderRadius: 14, padding: 12,
-    alignItems: "center", borderWidth: 1, borderColor: C.border },
+  statsRow: { flexDirection: "row", gap: 10 },
+  statBox: { flex: 1, backgroundColor: C.bg, borderRadius: 14, padding: 12,alignItems: "center", borderWidth: 1, borderColor: C.border },
   statEmoji: { fontSize: 18, marginBottom: 4 },
   statValue: { fontSize: 14, fontWeight: "900", color: C.textDark },
   statLabel: { fontSize: 9, fontWeight: "700", color: C.textLight, textTransform: "uppercase", letterSpacing: 0.3, marginTop: 2 },
 
   toggleRow: { flexDirection: "row", gap: 8, marginBottom: 18 },
-  togglePill:{ flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: C.bg,
-    alignItems: "center", borderWidth: 1.5, borderColor: C.border },
-  toggleActive:     { backgroundColor: C.roseDark, borderColor: C.roseDark },
+  togglePill:{ flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: C.bg, alignItems: "center", borderWidth: 1.5, borderColor: C.border },
+  toggleActive: { backgroundColor: C.roseDark, borderColor: C.roseDark },
   toggleText: { fontWeight: "700", fontSize: 11, color: C.textMid },
   toggleTextActive: { color: C.white },
 
   chartRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
-  chartCol:  { alignItems: "center", flex: 1 },
+  chartCol: { alignItems: "center", flex: 1 },
   chartVal: { fontSize: 8, fontWeight: "700", color: C.textLight, marginBottom: 3 },
   bar: { width: 22, borderRadius: 8, backgroundColor: C.rose, marginBottom: 5 },
   chartLabel: { fontSize: 9, fontWeight: "800", color: C.textMid },
 
   modalBackdrop:  { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "center", alignItems: "center" },
-  modalCard:  { width: "88%", backgroundColor: C.white, borderRadius: 22, padding: 24 },
+  modalCard: { width: "88%", backgroundColor: C.white, borderRadius: 22, padding: 24 },
   modalTitle:  { fontSize: 18, fontWeight: "900", color: C.textDark, marginBottom: 4 },
-  modalSub:   { fontSize: 13, color: C.textLight, fontWeight: "600", marginBottom: 16 },
-  modalInput:     { backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.border, borderRadius: 12,
-    padding: 14, fontSize: 22, fontWeight: "800", color: C.textDark, marginBottom: 20, textAlign: "center" },
-  modalActions:   { flexDirection: "row", gap: 12 },
-  modalCancelBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: C.bg,
-    alignItems: "center", borderWidth: 1.5, borderColor: C.border },
+  modalSub: { fontSize: 13, color: C.textLight, fontWeight: "600", marginBottom: 16 },
+  modalInput: { backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, padding: 14, fontSize: 22, fontWeight: "800", color: C.textDark, marginBottom: 20, textAlign: "center" },
+  modalActions: { flexDirection: "row", gap: 12 },
+  modalCancelBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: C.bg, alignItems: "center", borderWidth: 1.5, borderColor: C.border },
   modalCancelTxt: { fontWeight: "700", color: C.textMid },
-  modalSaveBtn:   { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: C.roseDark, alignItems: "center" },
-  modalSaveTxt:   { fontWeight: "800", color: C.white },
+  modalSaveBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: C.roseDark, alignItems: "center" },
+  modalSaveTxt: { fontWeight: "800", color: C.white },
 });

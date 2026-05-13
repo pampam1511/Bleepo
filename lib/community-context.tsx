@@ -1,7 +1,6 @@
 import { createContext, useContext } from "react";
 import { ID, Query, Permission, Role } from "react-native-appwrite";
-import {
-  account,
+import {account,
   databases,
   DATABASE_ID,
   USER_PROFILE_COLLECTION_ID,
@@ -12,45 +11,43 @@ import {
   STEPS_DAILY_COLLECTION_ID,
 } from "@/lib/appwrite";
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
 
 type LeaderboardEntry = {
-  userId:      string;
-  name:        string;
-  totalSteps:  number;
+  userId: string;
+  name:string;
+  totalSteps:number;
   totalPoints: number;
 };
 
 type PointsResult = {
-  totalPoints:        number;
-  challengePoints:    number;
-  consistencyPoints:  number;
+  totalPoints: number;
+  challengePoints:number;
+  consistencyPoints: number;
 };
 
 type CommunityContextType = {
-  getGlobalLeaderboard:    (start: Date, end: Date) => Promise<LeaderboardEntry[]>;
-  getChallenges:           () => Promise<any[]>;
-  getMyChallenges:         () => Promise<any[]>;
-  createChallenge:         (params: { title: string; type: "open" | "invite"; goalSteps: number; startDate: string; endDate: string }) => Promise<void>;
-  joinChallenge:           (challengeId: string) => Promise<void>;
+  getGlobalLeaderboard: (start: Date, end: Date) => Promise<LeaderboardEntry[]>;
+  getChallenges: () => Promise<any[]>;
+  getMyChallenges: () => Promise<any[]>;
+  createChallenge: (params: { title: string; type: "open" | "invite"; goalSteps: number; startDate: string; endDate: string }) => Promise<void>;
+  joinChallenge:(challengeId: string) => Promise<void>;
   getChallengeLeaderboard: (challengeId: string) => Promise<LeaderboardEntry[]>;
-  inviteToChallenge:       (challengeId: string, invitedUserId: string) => Promise<void>;
-  acceptInvite:            (inviteId: string) => Promise<void>;
-  getInvites:              () => Promise<any[]>;
+  inviteToChallenge:(challengeId: string, invitedUserId: string) => Promise<void>;
+  acceptInvite:(inviteId: string) => Promise<void>;
+  getInvites:() => Promise<any[]>;
   calculateAndApplyPoints: () => Promise<PointsResult>;
-  getMyPoints:             () => Promise<number>;
+  getMyPoints:() => Promise<number>;
 };
 
-// ─── Context ───────────────────────────────────────────────────────────────────
+
 
 const CommunityContext = createContext<CommunityContextType | undefined>(undefined);
 
 export function CommunityProvider({ children }: { children: React.ReactNode }) {
   const POINTS_CHALLENGE_COMPLETE = 100;
-  const POINTS_PER_STREAK_DAY     = 10;
-  const STREAK_MIN_DAYS           = 3;
+  const POINTS_PER_STREAK_DAY = 10;
+  const STREAK_MIN_DAYS = 3;
 
-  // ─── Helpers ────────────────────────────────────────────────────────────────
 
   const getProfiles = async () => {
     try {
@@ -79,21 +76,21 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toDateOnlyKey = (iso: string) => {
-    const d   = new Date(iso);
-    const y   = d.getUTCFullYear();
-    const m   = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const d = new Date(iso);
+    const y= d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
     const day = String(d.getUTCDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
   };
 
   const daysBetweenInclusive = (startIso: string, endIso: string) => {
     const out: string[] = [];
-    const cur  = new Date(startIso); cur.setUTCHours(0, 0, 0, 0);
+    const cur= new Date(startIso); cur.setUTCHours(0, 0, 0, 0);
     const last = new Date(endIso);  last.setUTCHours(0, 0, 0, 0);
     while (cur <= last) {
-      const y  = cur.getUTCFullYear();
+      const y = cur.getUTCFullYear();
       const mo = String(cur.getUTCMonth() + 1).padStart(2, "0");
-      const d  = String(cur.getUTCDate()).padStart(2, "0");
+      const d = String(cur.getUTCDate()).padStart(2, "0");
       out.push(`${y}-${mo}-${d}`);
       cur.setUTCDate(cur.getUTCDate() + 1);
     }
@@ -105,8 +102,8 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     let best = 1;
     let cur  = 1;
     for (let i = 1; i < dayKeysSorted.length; i++) {
-      const prev     = new Date(`${dayKeysSorted[i - 1]}T00:00:00Z`);
-      const next     = new Date(`${dayKeysSorted[i]}T00:00:00Z`);
+      const prev= new Date(`${dayKeysSorted[i - 1]}T00:00:00Z`);
+      const next = new Date(`${dayKeysSorted[i]}T00:00:00Z`);
       const diffDays = Math.round((next.getTime() - prev.getTime()) / 86400000);
       if (diffDays === 1) { cur += 1; if (cur > best) best = cur; }
       else cur = 1;
@@ -129,7 +126,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  // ─── Leaderboards ──────────────────────────────────────────────────────────
+  // Leaderboards 
 
   const getGlobalLeaderboard = async (start: Date, end: Date): Promise<LeaderboardEntry[]> => {
     try {
@@ -224,7 +221,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // ─── Challenges ────────────────────────────────────────────────────────────
+  // Challenges 
 
   const getChallenges = async () => {
     try {
@@ -238,7 +235,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
 
   const getMyChallenges = async () => {
     try {
-      const user        = await account.get();
+      const user = await account.get();
       const memberships = await databases.listDocuments(DATABASE_ID, CHALLENGE_MEMBERS_COLLECTION_ID, [
         Query.equal("userId", user.$id),
         Query.limit(1000),
@@ -287,7 +284,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   };
 
   const joinChallenge = async (challengeId: string) => {
-    const user      = await account.get();
+    const user = await account.get();
     const challenge = await databases.getDocument(DATABASE_ID, CHALLENGES_COLLECTION_ID, challengeId);
     if (!isChallengeJoinableNow(challenge)) throw new Error("Challenge is not active right now");
     if (await isAlreadyMember(challengeId, user.$id)) return;
@@ -302,7 +299,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     await calculateAndApplyPoints();
   };
 
-  // ─── Invites ───────────────────────────────────────────────────────────────
+  // Invites 
 
   const inviteToChallenge = async (challengeId: string, invitedUserId: string) => {
     const user     = await account.get();
@@ -326,7 +323,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   };
 
   const acceptInvite = async (inviteId: string) => {
-    const user   = await account.get();
+    const user = await account.get();
     const invite = await databases.getDocument(DATABASE_ID, CHALLENGE_INVITES_COLLECTION_ID, inviteId);
     if (invite.invitedUserId !== user.$id) throw new Error("Not allowed to accept this invite");
     if (invite.status !== "accepted") {
@@ -340,7 +337,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   const getInvites = async () => {
     try {
       const user = await account.get();
-      const res  = await databases.listDocuments(DATABASE_ID, CHALLENGE_INVITES_COLLECTION_ID, [
+      const res = await databases.listDocuments(DATABASE_ID, CHALLENGE_INVITES_COLLECTION_ID, [
         Query.equal("invitedUserId", user.$id),
         Query.equal("status", "pending"),
         Query.limit(1000),
@@ -352,7 +349,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // ─── Points ────────────────────────────────────────────────────────────────
+  // Points 
 
   const getMyPoints = async (): Promise<number> => {
     try {
@@ -368,7 +365,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   };
 
   const calculateAndApplyPoints = async (): Promise<PointsResult> => {
-    const user        = await account.get();
+    const user = await account.get();
     const memberships = await databases.listDocuments(DATABASE_ID, CHALLENGE_MEMBERS_COLLECTION_ID, [
       Query.equal("userId", user.$id),
       Query.limit(1000),
@@ -380,7 +377,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
       return { totalPoints: 0, challengePoints: 0, consistencyPoints: 0 };
     }
 
-    const challengeIds  = memberships.documents.map((m: any) => m.challengeId);
+    const challengeIds = memberships.documents.map((m: any) => m.challengeId);
     const challengesRes = await databases.listDocuments(DATABASE_ID, CHALLENGES_COLLECTION_ID, [
       Query.equal("$id", challengeIds),
       Query.limit(1000),
@@ -389,7 +386,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     challengesRes.documents.forEach((c: any) => { challengeById[c.$id] = c; });
 
     const minStart = challengesRes.documents.map((c: any) => new Date(c.startDate).getTime()).reduce((a, b) => Math.min(a, b), Date.now());
-    const maxEnd   = challengesRes.documents.map((c: any) => new Date(c.endDate).getTime()).reduce((a, b) => Math.max(a, b), 0);
+    const maxEnd = challengesRes.documents.map((c: any) => new Date(c.endDate).getTime()).reduce((a, b) => Math.max(a, b), 0);
 
     const allSteps = await databases.listDocuments(DATABASE_ID, STEPS_DAILY_COLLECTION_ID, [
       Query.equal("userId", user.$id),
@@ -404,14 +401,14 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
       stepsByDay[key] = (stepsByDay[key] ?? 0) + Number(s.steps ?? 0);
     });
 
-    let challengePoints   = 0;
+    let challengePoints = 0;
     let consistencyPoints = 0;
 
     for (const m of memberships.documents as any[]) {
       const c = challengeById[m.challengeId];
       if (!c) continue;
 
-      const rangeDays          = daysBetweenInclusive(c.startDate, c.endDate);
+      const rangeDays = daysBetweenInclusive(c.startDate, c.endDate);
       let challengeTotalSteps  = 0;
       const loggedDays: string[] = [];
 
@@ -421,31 +418,31 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
         if (steps > 0) loggedDays.push(dayKey);
       });
 
-      const goal             = Number(c.goalStep ?? c.goalSteps ?? 0);
-      const completed        = goal > 0 && challengeTotalSteps >= goal;
-      const earnedChallenge  = completed ? POINTS_CHALLENGE_COMPLETE : 0;
+      const goal = Number(c.goalStep ?? c.goalSteps ?? 0);
+      const completed = goal > 0 && challengeTotalSteps >= goal;
+      const earnedChallenge = completed ? POINTS_CHALLENGE_COMPLETE : 0;
 
-      const uniqueLoggedDays  = Array.from(new Set(loggedDays)).sort();
-      const maxStreak         = getMaxStreak(uniqueLoggedDays);
+      const uniqueLoggedDays = Array.from(new Set(loggedDays)).sort();
+      const maxStreak = getMaxStreak(uniqueLoggedDays);
       const earnedConsistency = maxStreak >= STREAK_MIN_DAYS ? maxStreak * POINTS_PER_STREAK_DAY : 0;
-      const earnedTotal       = earnedChallenge + earnedConsistency;
+      const earnedTotal = earnedChallenge + earnedConsistency;
 
-      challengePoints   += earnedChallenge;
+      challengePoints += earnedChallenge;
       consistencyPoints += earnedConsistency;
 
       await databases.updateDocument(DATABASE_ID, CHALLENGE_MEMBERS_COLLECTION_ID, m.$id, {
-        points:             earnedTotal,
-        challengePoints:    earnedChallenge,
-        consistencyPoints:  earnedConsistency,
+        points: earnedTotal,
+        challengePoints: earnedChallenge,
+        consistencyPoints:earnedConsistency,
         completed,
-        totalSteps:         challengeTotalSteps,
-        maxStreakDays:      maxStreak,
-        pointsUpdatedAt:    new Date().toISOString(),
+        totalSteps:challengeTotalSteps,
+        maxStreakDays:maxStreak,
+        pointsUpdatedAt: new Date().toISOString(),
       });
     }
 
     const totalPoints = challengePoints + consistencyPoints;
-    const profile     = await ensureCommunityProfile(user.$id);
+    const profile = await ensureCommunityProfile(user.$id);
     await databases.updateDocument(DATABASE_ID, COMMUNITY_PROFILES_COLLECTION_ID, profile.$id, {
       totalPoints,
       pointsUpdatedAt: new Date().toISOString(),
@@ -454,7 +451,6 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     return { totalPoints, challengePoints, consistencyPoints };
   };
 
-  // ─── Provider ──────────────────────────────────────────────────────────────
 
   return (
     <CommunityContext.Provider value={{

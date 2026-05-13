@@ -15,6 +15,7 @@ const C = {
   textDark:"#3D2030", textMid:"#7A4F5A", textLight:"#B08090", border:"#F0D5DA",
 };
 
+// Define difficulty filter type and options
 type DifficultyFilter = "all" | "easy" | "medium" | "hard";
 
 const DIFFICULTY_FILTERS: { key: DifficultyFilter; label: string;  }[] = [
@@ -43,17 +44,20 @@ export default function RecipeScreen() {
   const [isScanning,setIsScanning]= useState(true);
   const [scanResult,setScanResult]= useState<any | null>(null);
 
+  // Load recipes and request camera permission on mount
   useEffect(() => {
     Camera.requestCameraPermissionsAsync().then(({ status }) => setHasPermission(status === "granted"));
     loadAllRecipes();
   }, []);
 
+  // Function to load all recipes without filters
   const loadAllRecipes = async () => {
     setLoading(true);
     try { setRecipes(await getAllRecipes()); }
     finally { setLoading(false); }
   };
 
+  // Function to load favorite recipes and their IDs for quick access
   const loadFavorites = useCallback(async () => {
     setFavLoading(true);
     try {
@@ -65,6 +69,7 @@ export default function RecipeScreen() {
 
   useFocusEffect(useCallback(() => { loadFavorites(); }, [loadFavorites]));
 
+  // Function to handle search based on query input
   const handleSearch = async () => {
     if (!query.trim()) { loadAllRecipes(); return; }
     setLoading(true);
@@ -72,10 +77,12 @@ export default function RecipeScreen() {
     finally { setLoading(false); }
   };
 
+  // Filter recipes based on selected difficulty
   const displayedRecipes = difficulty === "all"
     ? recipes
     : recipes.filter((r) => r.difficulty === difficulty);
 
+    // Function to toggle favorite status of a recipe
   const toggleFavorite = async (recipe: Recipe) => {
     if (favIds.has(recipe.$id)) {
       await removeFavorite(recipe.$id);
@@ -88,6 +95,7 @@ export default function RecipeScreen() {
     }
   };
 
+  // Function to handle barcode scanning and fetch nutrition data
   const onBarCodeScanned = async ({ data }: { data: string }) => {
     if (!isScanning) return;
     setIsScanning(false);
@@ -111,9 +119,7 @@ export default function RecipeScreen() {
     } catch { setScanResult({ name: "Error fetching data" }); }
   };
 
-  
-  
-
+// Function to save scanned food's nutrition data to daily logs
   const saveFoodToDailyLogs = async (food: { calories: number; protein: number; carbs: number; fat: number }) => {
     const [calDoc] = await Promise.all([getTodayCalories(), getTodayNutrition()]);
     await saveTodayCalories({
@@ -126,9 +132,10 @@ export default function RecipeScreen() {
     
   };
 
+  // Function to render each recipe card in the list
   const renderRecipe = ({ item }: { item: Recipe }) => {
     const imageUrl = getImageUrl(item.image);
-    const isFav    = favIds.has(item.$id);
+    const isFav = favIds.has(item.$id);
     const totalMin = (item.preparationTime ?? 0) + (item.cookingTime ?? 0);
     return (
       <TouchableOpacity
@@ -295,61 +302,60 @@ export default function RecipeScreen() {
 }
 
 const s = StyleSheet.create({
-  screen:        { flex: 1 },
+  screen: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 16 },
-  title:         { fontSize: 26, fontWeight: "900", color: C.textDark, marginBottom: 16, letterSpacing: 0.3, marginTop: 60 },
-  searchRow:     { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 14 },
-  searchInput:   { flex: 1, backgroundColor: C.white, borderRadius: 20, paddingVertical: 12, paddingHorizontal: 18,
-    fontSize: 15, color: C.textDark, shadowColor: C.rose, shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  searchBtn:         { borderRadius: 20, overflow: "hidden" },
+  title: { fontSize: 26, fontWeight: "900", color: C.textDark, marginBottom: 16, letterSpacing: 0.3, marginTop: 60 },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 14 },
+  searchInput: { flex: 1, backgroundColor: C.white, borderRadius: 20, paddingVertical: 12, paddingHorizontal: 18,fontSize: 15, color: C.textDark, shadowColor: C.rose, shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  searchBtn: { borderRadius: 20, overflow: "hidden" },
   searchBtnGradient: { width: 46, height: 46, alignItems: "center", justifyContent: "center", borderRadius: 23 },
-  actionRow:     { flexDirection: "row", gap: 12, marginBottom: 20 },
-  actionBtn:     { flex: 1, borderRadius: 16, overflow: "hidden" },
+  actionRow: { flexDirection: "row", gap: 12, marginBottom: 20 },
+  actionBtn:{ flex: 1, borderRadius: 16, overflow: "hidden" },
   actionBtnInner:{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 13, paddingHorizontal: 12 },
   actionBtnText: { fontSize: 13, fontWeight: "700" },
-  sectionHeading:   { fontSize: 16, fontWeight: "800", color: C.textDark, marginBottom: 12, letterSpacing: 0.2 },
-  filterGrid:       { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
-  filterChip:       { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14,
-    paddingVertical: 8, borderRadius: 20, backgroundColor: C.white, borderWidth: 1.5, borderColor: C.border },
+  sectionHeading:{ fontSize: 16, fontWeight: "800", color: C.textDark, marginBottom: 12, letterSpacing: 0.2 },
+  filterGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
+  filterChip:{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14,paddingVertical: 8, borderRadius: 20, backgroundColor: C.white, borderWidth: 1.5, borderColor: C.border },
   filterChipActive: { backgroundColor: C.roseDark, borderColor: C.roseDark },
-  filterEmoji:      { fontSize: 14 },
-  filterLabel:      { fontSize: 13, fontWeight: "600", color: C.textMid },
+  filterEmoji: { fontSize: 14 },
+  filterLabel: { fontSize: 13, fontWeight: "600", color: C.textMid },
   filterLabelActive:{ color: C.white },
-  emptyCard:  { backgroundColor: C.white, borderRadius: 16, padding: 24, alignItems: "center", marginBottom: 12 },
+  emptyCard: { backgroundColor: C.white, borderRadius: 16, padding: 24, alignItems: "center", marginBottom: 12 },
   emptyEmoji: { fontSize: 36, marginBottom: 8 },
-  emptyText:  { color: C.textLight, fontWeight: "600", fontSize: 14 },
-  recipeCard:   { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.white,
+  emptyText: { color: C.textLight, fontWeight: "600", fontSize: 14 },
+  
+  recipeCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.white,
     borderRadius: 20, padding: 12, marginBottom: 12, shadowColor: C.rose, shadowOpacity: 0.08,
     shadowRadius: 10, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  recipeThumb:  { width: 64, height: 64, borderRadius: 14, alignItems: "center", justifyContent: "center", overflow: "hidden" },
-  recipeInfo:   { flex: 1 },
-  recipeTitle:  { fontSize: 15, fontWeight: "700", color: C.textDark, marginBottom: 6 },
-  tagRow:       { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  timeTag:      { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "#F5F0F2",
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-  timeTagText:  { fontSize: 11, color: C.textLight, fontWeight: "600" },
-  tag:          { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
-  tagText:      { fontSize: 11, fontWeight: "700" },
-  heartBtn:     { borderRadius: 20, overflow: "hidden" },
+  
+  recipeThumb:{ width: 64, height: 64, borderRadius: 14, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  recipeInfo: { flex: 1 },
+  recipeTitle: { fontSize: 15, fontWeight: "700", color: C.textDark, marginBottom: 6 },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  timeTag: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "#F5F0F2",paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  timeTagText: { fontSize: 11, color: C.textLight, fontWeight: "600" },
+  tag: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
+  tagText: { fontSize: 11, fontWeight: "700" },
+  heartBtn: { borderRadius: 20, overflow: "hidden" },
   heartBtnInner:{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   modalContainer: { flex: 1, padding: 24 },
-  modalTitle:     { fontSize: 24, fontWeight: "900", color: C.textDark, marginBottom: 4 },
-  modalSubtitle:  { fontSize: 14, color: C.textLight, fontWeight: "600", marginBottom: 20 },
+  modalTitle:{ fontSize: 24, fontWeight: "900", color: C.textDark, marginBottom: 4 },
+  modalSubtitle:{ fontSize: 14, color: C.textLight, fontWeight: "600", marginBottom: 20 },
   scannerWrapper: { flex: 1, borderRadius: 24, overflow: "hidden", marginBottom: 16 },
-  scanner:        { flex: 1 },
-  scanOverlay:    { ...StyleSheet.absoluteFillObject, borderWidth: 2, borderColor: C.rose, borderRadius: 24 },
+  scanner:{ flex: 1 },
+  scanOverlay: { ...StyleSheet.absoluteFillObject, borderWidth: 2, borderColor: C.rose, borderRadius: 24 },
   scanResultCard: { backgroundColor: C.white, borderRadius: 16, padding: 16, marginBottom: 16, alignItems: "center",
     shadowColor: C.rose, shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
   scanResultText: { fontSize: 16, fontWeight: "700", color: C.mintDark },
-  closeBtn:       { borderRadius: 16, overflow: "hidden" },
-  closeBtnInner:  { paddingVertical: 14, alignItems: "center", borderRadius: 16 },
-  closeBtnText:   { fontSize: 15, fontWeight: "800", color: C.white },
-  modalInput:     { backgroundColor: C.white, borderRadius: 14, paddingVertical: 13, paddingHorizontal: 18,
+  closeBtn:{ borderRadius: 16, overflow: "hidden" },
+  closeBtnInner: { paddingVertical: 14, alignItems: "center", borderRadius: 16 },
+  closeBtnText:{ fontSize: 15, fontWeight: "800", color: C.white },
+  modalInput:{backgroundColor: C.white, borderRadius: 14, paddingVertical: 13, paddingHorizontal: 18,
     fontSize: 15, color: C.textDark, marginBottom: 12, shadowColor: C.rose, shadowOpacity: 0.06,
     shadowRadius: 6, shadowOffset: { width: 0, height: 1 }, elevation: 2 },
-  saveBtn:      { borderRadius: 16, overflow: "hidden", marginTop: 4 },
+  saveBtn: { borderRadius: 16, overflow: "hidden", marginTop: 4 },
   saveBtnInner: { paddingVertical: 14, alignItems: "center" },
-  saveBtnText:  { fontSize: 15, fontWeight: "800", color: C.white },
-  cancelBtn:    { marginTop: 12, alignItems: "center", paddingVertical: 12 },
+  saveBtnText:{ fontSize: 15, fontWeight: "800", color: C.white },
+  cancelBtn: { marginTop: 12, alignItems: "center", paddingVertical: 12 },
   cancelBtnText:{ fontSize: 15, fontWeight: "600", color: C.textMid },
 });

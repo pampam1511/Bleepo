@@ -197,7 +197,7 @@ export function computePeriodStats(logs: any[]) {
       avgCycle = DEFAULT_CYCLE_LENGTH;
     }
   } else {
-    // Single streak — use default cycle with ±3 day estimated range
+    
     avgCycle = DEFAULT_CYCLE_LENGTH;
     cycleRange = {
       early: addDays(streaks[0].start, avgCycle - 3),

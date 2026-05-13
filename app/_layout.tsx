@@ -17,7 +17,6 @@ function RootLayoutC() {
   useEffect(() => {
     if(isLoadingUser) return;
   
-
     const inAuthGroup = segments[0] === "auth";
 
     //const timerId = setTimeout(() => {}, 0);
@@ -28,6 +27,7 @@ function RootLayoutC() {
 
     }
   
+    // Cleanup function to clear the timeout if the component unmounts or dependencies change
     //return () => clearTimeout(timerId);
   }, [user,isLoadingUser]);
 
@@ -40,6 +40,7 @@ function RootLayoutC() {
   );
 }
 
+// RootLayout wraps the entire app with all necessary providers and the SafeAreaProvider
 export default function RootLayout() {
   return(
     <AuthProvider>

@@ -1,39 +1,35 @@
+import { DATABASE_ID, RECIPES, RECIPE_FAVORITES, RECIPE_IMAGES_BUCKET_ID, RECIPE_INGREDIENTS, account, databases } from "@/lib/appwrite";
 import { ID, Permission, Query, Role } from "react-native-appwrite";
-import { account, databases, DATABASE_ID, RECIPES, RECIPE_FAVORITES, RECIPE_INGREDIENTS, RECIPE_IMAGES_BUCKET_ID } from "@/lib/appwrite";
-
-
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 export type Recipe = {
-  $id:             string;
-  recipeName:      string;
-  instructions:    string;  // pipe-separated e.g. "Step 1|Step 2|Step 3"
+  $id:string;
+  recipeName: string;
+  instructions: string;  
   preparationTime: number;
-  cookingTime:     number;
-  servings:        number;
-  difficulty:      "easy" | "medium" | "hard";
-  image:           string;  // Appwrite Storage file ID
+  cookingTime:number;
+  servings:number;
+  difficulty:"easy" | "medium" | "hard";
+  image:string;  
 };
 
 export type RecipeIngredient = {
-  $id:        string;
-  recipeId:   string;
-  name:       string;
-  amount:     string;
-  orderIndex: number;
+  $id: string;
+  recipeId:string;
+  name:string;
+  amount:string;
+  orderIndex:number;
 };
 
 export type RecipeFavorite = {
-  $id:      string;
-  userId:   string;
+  $id:string;
+  userId:string;
   recipeId: string;
-  title:    string;
-  image:    string;
-  savedAt:  string;
+  title:string;
+  image:string;
+  savedAt:string;
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 // Build the Appwrite Storage image URL from a file ID
 export function getImageUrl(fileId: string): string {
@@ -49,8 +45,6 @@ export function parseInstructions(raw: string): string[] {
   if (!raw) return [];
   return raw.split("|").map((s) => s.trim()).filter(Boolean);
 }
-
-// ── Recipes ───────────────────────────────────────────────────────────────────
 
 // Get all recipes — used on the browse/home screen
 export async function getAllRecipes(): Promise<Recipe[]> {
@@ -92,9 +86,9 @@ export async function searchRecipesByName(query: string): Promise<Recipe[]> {
 }
 
 // Search recipes by ingredient:
-// 1. Find ingredient rows matching the search term
-// 2. Extract unique recipeIds from those rows
-// 3. Fetch and return those recipes
+// Find ingredient rows matching the search term
+// Extract unique recipeIds from those rows
+// Fetch and return those recipes
 export async function searchRecipesByIngredient(ingredient: string): Promise<Recipe[]> {
   try {
     const ingRes = await databases.listDocuments(DATABASE_ID, RECIPE_INGREDIENTS, [
@@ -153,8 +147,7 @@ export async function filterRecipesByDifficulty(
   }
 }
 
-// ── Ingredients ───────────────────────────────────────────────────────────────
-
+// Ingredients 
 // Get all ingredients for a recipe, sorted by orderIndex
 export async function getIngredients(recipeId: string): Promise<RecipeIngredient[]> {
   try {
@@ -170,13 +163,12 @@ export async function getIngredients(recipeId: string): Promise<RecipeIngredient
   }
 }
 
-// ── Favourites ────────────────────────────────────────────────────────────────
-
+//  Favourites
 // Get the current user's saved favourites
 export async function getFavorites(): Promise<RecipeFavorite[]> {
   try {
     const user = await account.get();
-    const res  = await databases.listDocuments(DATABASE_ID, RECIPE_FAVORITES, [
+    const res = await databases.listDocuments(DATABASE_ID, RECIPE_FAVORITES, [
       Query.equal("userId", user.$id),
       Query.orderDesc("savedAt"),
     ]);
@@ -192,7 +184,7 @@ export async function saveFavorite(recipe: Recipe): Promise<void> {
   try {
     const user = await account.get();
     const existing = await databases.listDocuments(DATABASE_ID, RECIPE_FAVORITES, [
-      Query.equal("userId",   user.$id),
+      Query.equal("userId", user.$id),
       Query.equal("recipeId", recipe.$id),
       Query.limit(1),
     ]);
@@ -201,11 +193,11 @@ export async function saveFavorite(recipe: Recipe): Promise<void> {
     await databases.createDocument(
       DATABASE_ID, RECIPE_FAVORITES, ID.unique(),
       {
-        userId:   user.$id,
+        userId: user.$id,
         recipeId: recipe.$id,
-        title:    recipe.recipeName,
-        image:    recipe.image ?? "",
-        savedAt:  new Date().toISOString(),
+        title: recipe.recipeName,
+        image: recipe.image ?? "",
+        savedAt:new Date().toISOString(),
       },
       [
         Permission.read(Role.user(user.$id)),
@@ -223,7 +215,7 @@ export async function removeFavorite(recipeId: string): Promise<void> {
   try {
     const user = await account.get();
     const existing = await databases.listDocuments(DATABASE_ID, RECIPE_FAVORITES, [
-      Query.equal("userId",   user.$id),
+      Query.equal("userId", user.$id),
       Query.equal("recipeId", recipeId),
       Query.limit(1),
     ]);
@@ -239,8 +231,8 @@ export async function removeFavorite(recipeId: string): Promise<void> {
 export async function isFavorite(recipeId: string): Promise<boolean> {
   try {
     const user = await account.get();
-    const res  = await databases.listDocuments(DATABASE_ID, RECIPE_FAVORITES, [
-      Query.equal("userId",   user.$id),
+    const res = await databases.listDocuments(DATABASE_ID, RECIPE_FAVORITES, [
+      Query.equal("userId",user.$id),
       Query.equal("recipeId", recipeId),
       Query.limit(1),
     ]);

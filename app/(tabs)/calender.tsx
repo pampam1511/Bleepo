@@ -1,84 +1,54 @@
 import { useHealth } from "@/lib/health /health-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Dimensions,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import {ActivityIndicator,Dimensions,NativeScrollEvent,NativeSyntheticEvent,ScrollView,StyleSheet,Text,TouchableOpacity,View,} from "react-native";
 import { TextInput } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 
-const SCREEN_W       = Dimensions.get("window").width;
-const WEEK_DAYS      = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-const MOOD_OPTIONS   = ["😢", "😕", "😐", "🙂", "😄"];
+const SCREEN_W = Dimensions.get("window").width;
+const WEEK_DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const MOOD_OPTIONS = ["😢", "😕", "😐", "🙂", "😄"];
 const BLEEDING_OPTIONS  = ["none", "spotting", "light", "medium", "heavy"] as const;
-const ACNE_LEVELS       = ["mild", "moderate", "severe","none"] as const;
-const SYMPTOM_OPTIONS   = ["cramps", "headache", "fatigue", "nausea", "bloating"] as const;
+const ACNE_LEVELS = ["mild", "moderate", "severe","none"] as const;
+const SYMPTOM_OPTIONS = ["cramps", "headache", "fatigue", "nausea", "bloating"] as const;
 
 const PCOS_SYMPTOMS = [
-  { key: "acne",           label: "Acne", color: "#E8929A" },
-  { key: "hairloss",       label: "Hair Loss", color: "#B07CC6" },
-  { key: "facialhair",     label: "Facial Hair", color: "#C45C6A" },
-  { key: "bloating",       label: "Bloating", color: "#6BBFA3" },
-  { key: "fatigue",        label: "Fatigue", color: "#E8A87C" },
-  { key: "cramps",         label: "Cramps", color: "#C45C6A" },
-  { key: "moodswings",     label: "Mood Swings", color: "#8A7CC6" },
+  { key: "acne",label: "Acne", color: "#E8929A" },
+  { key: "hairloss",label: "Hair Loss", color: "#B07CC6" },
+  { key: "facialhair",label: "Facial Hair", color: "#C45C6A" },
+  { key: "bloating",label: "Bloating", color: "#6BBFA3" },
+  { key: "fatigue",label: "Fatigue", color: "#E8A87C" },
+  { key: "cramps",label: "Cramps", color: "#C45C6A" },
+  { key: "moodswings",label: "Mood Swings", color: "#8A7CC6" },
   { key: "irregularbleed", label: "Irregular Bleed", color: "#E85C8A" },
-  { key: "headache",       label: "Headaches", color: "#7CA8C6" },
+  { key: "headache",label: "Headaches", color: "#7CA8C6" },
 ];
-
-// ─── Design Tokens ────────────────────────────────────────────────────────────
-const C = {
-  blush:     "#FADADD",
-  roseLight: "#F9C5C9",
-  rose:      "#E8929A",
-  roseDark:  "#C45C6A",
-  lavender:  "#EDD9F5",
-  lavDark:   "#B07CC6",
-  peach:     "#FAE5D3",
-  peachDark: "#E8A87C",
-  mint:      "#D4F0E8",
-  mintDark:  "#6BBFA3",
-  cream:     "#FFF8F5",
-  white:     "#FFFFFF",
-  textDark:  "#3D2030",
-  textMid:   "#7A4F5A",
-  textLight: "#B08090",
-  border:    "#F0D5DA",
+// Colour palette 
+const C = {blush:"#FADADD", roseLight: "#F9C5C9", rose:"#E8929A", roseDark: "#C45C6A",
+          lavender:"#EDD9F5",lavDark:"#B07CC6", peach:"#FAE5D3", peachDark: "#E8A87C", 
+          mint:"#D4F0E8", mintDark:"#6BBFA3", cream:"#FFF8F5", white: "#FFFFFF", pinky: "#F0D5DA",
+          textDark:"#3D2030", textMid:"#7A4F5A", textLight: "#B08090", border:"#F0D5DA", butter:"#FAD5B8", 
+          lilac: "#EDE8FD", purply:"#E8C9F5", minty:"#B8EAD8", lp:"#FDE8F0", lpd: "#FAD5E2", blu:"#EDE8FD", 
+          bluD: "#DDD5FA", darklavender: "#8A55A8", black:"#000",
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
+// calendar logic
 function buildMonth(year: number, month: number) {
-  const firstDay    = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date( year, month,1).getDay();
+  const daysInMonth = new Date( year, month + 1, 0).getDate();
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   return cells;
 }
 
-function isInRange(
-  day: number,
-  start: Date | null,
-  end: Date | null,
-  year: number,
-  month: number
-) {
+function isInRange(day: number,start: Date | null,end: Date | null,year: number,month: number) {
   if (!start || !end) return false;
   const curr = new Date(year, month, day);
   return curr >= start && curr <= end;
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
+// Calendar UI Components
 function SectionLabel({ children }: { children: string }) {
   return <Text style={styles.sectionLabel}>{children}</Text>;
 }
@@ -216,7 +186,6 @@ function PCOSTrendsPanel({
         if (!cancelled) setLoading(false);
       }
     };
-
     fetchAll();
     return () => { cancelled = true; };
   }, [pcosSummaries, getDetailLog]);
@@ -251,14 +220,13 @@ function PCOSTrendsPanel({
       const acne = String(l.acne_levels ?? "").toLowerCase().trim();
       if (acne && acne !== "none") counts["acne"]++;
 
-      if (isTruthy(l.hairloss))          counts["hairloss"]++;
-      if (isTruthy(l.facialhair))        counts["facialhair"]++;
+      if (isTruthy(l.hairloss)) counts["hairloss"]++;
+      if (isTruthy(l.facialhair)) counts["facialhair"]++;
       if (isTruthy(l.irregularBleeding)) counts["irregularbleed"]++;
-      if (isTruthy(l.headache))          counts["headache"]++;
-
-      if (Number(l.bloating)    >= 2) counts["bloating"]++;
-      if (Number(l.fatigue)     >= 2) counts["fatigue"]++;
-      if (Number(l.painLevel)   >= 2) counts["cramps"]++;
+      if (isTruthy(l.headache)) counts["headache"]++;
+      if (Number(l.bloating) >= 2) counts["bloating"]++;
+      if (Number(l.fatigue) >= 2) counts["fatigue"]++;
+      if (Number(l.painLevel) >= 2) counts["cramps"]++;
       if (Number(l.stressLevel) >= 2) counts["moodswings"]++;
     });
 
@@ -295,22 +263,9 @@ function PCOSTrendsPanel({
     [symptomFrequency]
   );
 
-  // Days since last PCOS log
-  const daysSinceLast = useMemo(() => {
-    if (!pcosDetails.length) return null;
-    const latest = Math.max(
-      ...pcosDetails.map((l) => new Date(l.date).getTime())
-    );
-    return Math.round((Date.now() - latest) / 86400000);
-  }, [pcosDetails]);
-
   const facialHairPct =
     totalLogs > 0
       ? Math.round((symptomFrequency["facialhair"] / totalLogs) * 100)
-      : 0;
-  const irregularPct =
-    totalLogs > 0
-      ? Math.round((symptomFrequency["irregularbleed"] / totalLogs) * 100)
       : 0;
 
   //  Loading state
@@ -337,7 +292,7 @@ function PCOSTrendsPanel({
     >
       <Text style={tp.pageTitle}>✦ Your PCOS Insights</Text>
 
-      {/* ── Row 1: Avg Pain + Avg Fatigue ── */}
+      {/* Row 1: Avg Pain + Avg Fatigue */}
       <View style={styles.statsRow}>
         <LinearGradient
           colors={[C.blush, C.roseLight]}
@@ -361,7 +316,7 @@ function PCOSTrendsPanel({
         </LinearGradient>
       </View>
 
-      {/* ── Row 2: Avg Bloating + Avg Stress ── */}
+      {/* Row 2: Avg Bloating + Avg Stress  */}
       <View style={styles.statsRow}>
         <LinearGradient
           colors={[C.mint, "#B8EAD8"]}
@@ -385,33 +340,10 @@ function PCOSTrendsPanel({
         </LinearGradient>
       </View>
 
-      {/* ── Row 3: Days Logged + Days Since Last ── */}
-      <View style={styles.statsRow}>
-        <LinearGradient
-          colors={["#FDE8F0", "#FAD5E2"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.statCard}
-        >
-          <Text style={styles.statCardLabel}>Days Logged</Text>
-          <Text style={styles.statCardValue}>{pcosSummaries.length}</Text>
-          <Text style={styles.statCardUnit}>total entries</Text>
-        </LinearGradient>
-        <LinearGradient
-          colors={["#EDE8FD", "#DDD5FA"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.statCard}
-        >
-          <Text style={styles.statCardLabel}>Last Log</Text>
-          <Text style={styles.statCardValue}>{daysSinceLast ?? "--"}</Text>
-          <Text style={styles.statCardUnit}>days ago</Text>
-        </LinearGradient>
-      </View>
-
-      {/* ── Wide card: Dominant Mood ── */}
+      
+      {/* Wide card: Dominant Mood  */}
       <LinearGradient
-        colors={["#EDE8FD", "#DDD5FA"]}
+        colors={[C.lilac, "#DDD5FA"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.wideCard}
@@ -422,7 +354,7 @@ function PCOSTrendsPanel({
         </Text>
       </LinearGradient>
 
-      {/* ── Wide card: Top Symptom ── */}
+      {/*  Wide card: Top Symptom */}
       <LinearGradient
         colors={["#FFE8ED", "#FDD5DC"]}
         start={{ x: 0, y: 0 }}
@@ -449,109 +381,45 @@ function PCOSTrendsPanel({
         <Text style={styles.wideCardValue}>{facialHairPct}% </Text>
       </LinearGradient>
 
-      {/* ── Wide card: Irregular Bleeding ── */}
-      <LinearGradient
-        colors={[C.blush, C.roseLight]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.wideCard}
-      >
-        <Text style={styles.wideCardLabel}>Irregular Bleeding</Text>
-        <Text style={styles.wideCardValue}>{irregularPct}% </Text>
-      </LinearGradient>
-
-      {/* ── Symptom Frequency Bars ── */}
-      <Text style={tp.sectionTitle}>Symptom Frequency</Text>
-      <View style={tp.sympCard}>
-        {PCOS_SYMPTOMS.map((s) => {
-          const count = symptomFrequency[s.key] ?? 0;
-          const pct   = totalLogs > 0 ? Math.round((count / totalLogs) * 100) : 0;
-          return (
-            <View key={s.key} style={tp.sympRow}>
-              <Text style={tp.sympLabel}>{s.label}</Text>
-              <View style={tp.sympBarTrack}>
-                <View
-                  style={[
-                    tp.sympBarFill,
-                    {
-                      width: pct > 0 ? (`${pct}%` as any) : 2,
-                      backgroundColor: s.color,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={[tp.sympPct, { color: pct > 0 ? s.color : C.textLight }]}>
-                {pct}%
-              </Text>
-            </View>
-          );
-        })}
-      </View>
+          
     </ScrollView>
   );
 }
 
-const tp = StyleSheet.create({
-  scroll:       { paddingHorizontal: 16, paddingBottom: 40 },
-  empty:        { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, paddingTop: 60 },
-  emptyEmoji:   { fontSize: 48, marginBottom: 12 },
-  emptyTitle:   { fontSize: 18, fontWeight: "800", color: C.textDark, marginBottom: 8 },
-  emptyBody:    { fontSize: 14, color: C.textLight, textAlign: "center", lineHeight: 20, fontWeight: "600" },
-  pageTitle:    { fontSize: 17, fontWeight: "800", color: C.textDark, marginBottom: 14, letterSpacing: 0.2 },
-  sectionTitle: {
-    fontSize: 13, fontWeight: "800", color: C.textMid, textTransform: "uppercase",
-    letterSpacing: 0.6, marginBottom: 10, marginTop: 8,
-  },
-  sympCard:     {
-    backgroundColor: C.white, borderRadius: 20, padding: 16, marginBottom: 16,
-    borderWidth: 1, borderColor: C.border,
-  },
-  sympRow:      { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
-  sympEmoji:    { fontSize: 14, width: 20 },
-  sympLabel:    { fontSize: 12, fontWeight: "700", color: C.textMid, width: 96 },
-  sympBarTrack: { flex: 1, height: 8, backgroundColor: "#F0E5F0", borderRadius: 4, overflow: "hidden" },
-  sympBarFill:  { height: 8, borderRadius: 4 },
-  sympPct:      { fontSize: 11, fontWeight: "800", width: 34, textAlign: "right" },
-});
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 
+//  Main Screen 
 export default function CalendarScreen() {
-  const { fetchMonthLogs, fetchAllLogs, getDetailLog, saveHealthLog, getPeriodStats } =
-    useHealth();
-
-  const [date,        setDate]        = useState(new Date());
+  const { fetchMonthLogs, fetchAllLogs, getDetailLog, saveHealthLog, getPeriodStats } = useHealth();
+  const [date,setDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [activeMode,  setActiveMode]  = useState<"PERIOD" | "PCOS" | null>(null);
-  const [logs,        setLogs]        = useState<any[]>([]);
-  const [allLogs,     setAllLogs]     = useState<any[]>([]);
-
-  const [panelIndex,    setPanelIndex]    = useState(0);
+  const [activeMode, setActiveMode]  = useState<"PERIOD" | "PCOS" | null>(null);
+  const [logs,setLogs] = useState<any[]>([]);
+  const [allLogs, setAllLogs] = useState<any[]>([]);
+  const [panelIndex, setPanelIndex] = useState(0);
   const panelScrollRef = useRef<ScrollView>(null);
-
-  const [moods,             setMoods]             = useState<string[]>([]);
-  const [painLevel,         setPainLevel]         = useState(3);
-  const [bleeding,          setBleeding]          = useState<"none" | "spotting" | "light" | "medium" | "heavy">("none");
-  const [padChanges,        setPadChanges]        = useState(0);
-  const [notes,             setNotes]             = useState("");
-  const [photos,            setPhotos]            = useState<string[]>([]);
-  const [bloating,          setBloating]          = useState(3);
-  const [facialHair,        setFacialHair]        = useState<"YES" | "NO">("NO");
-  const [stressLevel,       setStressLevel]       = useState(3);
-  const [periodStart,       setPeriodStart]       = useState<Date | null>(null);
-  const [periodEnd,         setPeriodEnd]         = useState<Date | null>(null);
-  const [showStartPicker,   setShowStartPicker]   = useState(false);
-  const [showEndPicker,     setShowEndPicker]     = useState(false);
-  const [acne_levels,       setAcneLevel]         = useState<"none" | "mild" | "moderate" | "severe">("mild");
-  const [fatigue,           setFatigue]           = useState(3);
+  const [moods, setMoods] = useState<string[]>([]);
+  const [painLevel, setPainLevel] = useState(3);
+  const [bleeding, setBleeding] = useState<"none" | "spotting" | "light" | "medium" | "heavy">("none");
+  const [notes, setNotes] = useState("");
+  const [bloating, setBloating] = useState(3);
+  const [facialHair, setFacialHair] = useState<"YES" | "NO">("NO");
+  const [stressLevel, setStressLevel] = useState(3);
+  const [periodStart, setPeriodStart] = useState<Date | null>(null);
+  const [periodEnd, setPeriodEnd] = useState<Date | null>(null);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [acne_levels, setAcneLevel] = useState<"none" | "mild" | "moderate" | "severe">("mild");
+  const [fatigue, setFatigue] = useState(3);
   const [increasedAppetite, setIncreasedAppetite] = useState(3);
-  const [periodSymptoms,    setPeriodSymptoms]    = useState<string[]>([]);
-  const [hairloss,          setHairloss]          = useState(false);
+  const [periodSymptoms, setPeriodSymptoms] = useState<string[]>([]);
+  const [hairloss, setHairloss] = useState(false);
   const [irregularBleeding, setIrregularBleeding] = useState(false);
-  const [headache,          setHeadache]          = useState(false);
+  const [headache, setHeadache] = useState(false);
 
-  const monthLabel = date.toLocaleString("en-US", { month: "long", year: "numeric" });
-  const cells      = useMemo(() => buildMonth(date.getFullYear(), date.getMonth()), [date]);
+  const monthLabel = date.toLocaleString("en-UK", { month: "long", year: "numeric" });
+  // Build the grid of day cells for the current month (nulls = empty slots before day 1)
+  const cells = useMemo(() => buildMonth(date.getFullYear(), date.getMonth()), [date]);
 
   const selectedDateLocal =
     selectedDay !== null
@@ -560,15 +428,18 @@ export default function CalendarScreen() {
 
   useEffect(() => {
     const load = async () => {
+      // Fetch just the logs for this month to display dots on calendar
       const [monthLogs, all] = await Promise.all([fetchMonthLogs(date), fetchAllLogs()]);
       setLogs(monthLogs);
       setAllLogs(all);
     };
     load();
+    // Clear any selected day / open panels when month changes
     setSelectedDay(null);
     setActiveMode(null);
   }, [date]);
 
+  // Find the log (if any) for the currently selected day, so we can populate the edit panel if user opens it
   const selectedLog =
     selectedDay !== null
       ? logs.find((log) => {
@@ -582,6 +453,7 @@ export default function CalendarScreen() {
       : null;
 
   useEffect(() => {
+    //Only fetch if both a log exists for this day and a mode PERIOD OR PCOS is chosen
     if (!selectedLog || !activeMode) return;
     const loadDetails = async () => {
       const detail = await getDetailLog(selectedLog.$id, activeMode);
@@ -590,9 +462,7 @@ export default function CalendarScreen() {
       setMoods(detail.moods ?? []);
       if (activeMode === "PERIOD") {
         setBleeding(detail.flowIntensity ?? "none");
-        setPadChanges(detail.padChanges ?? 0);
         setNotes(detail.notes ?? "");
-        setPhotos(detail.photoIds ?? []);
         setPeriodStart(detail.startDate ? new Date(detail.startDate) : null);
         setPeriodEnd(detail.endDate ? new Date(detail.endDate) : null);
         setPeriodSymptoms(detail.symptoms ?? []);
@@ -615,6 +485,7 @@ export default function CalendarScreen() {
 
   const handleSave = async () => {
     if (!selectedDateLocal || !activeMode) return;
+    //Fall back to selected day if period start/end weren't explicitly set
     let safeStart = periodStart;
     let safeEnd   = periodEnd;
     if (activeMode === "PERIOD") {
@@ -631,11 +502,9 @@ export default function CalendarScreen() {
               painLevel,
               flowIntensity: bleeding,
               symptoms: periodSymptoms,
-              padChanges,
               notes,
-              photoIds: photos,
               startDate: safeStart ? safeStart.toISOString() : null,
-              endDate:   safeEnd   ? safeEnd.toISOString()   : null,
+              endDate:safeEnd ? safeEnd.toISOString()   : null,
             }
           : {
               painLevel,
@@ -651,6 +520,7 @@ export default function CalendarScreen() {
               headache,
             },
     });
+    // Refresh both log sets so calendar and stats update immediately
     const [updated, all] = await Promise.all([fetchMonthLogs(date), fetchAllLogs()]);
     setLogs(updated);
     setAllLogs(all);
@@ -662,14 +532,16 @@ export default function CalendarScreen() {
     setSelectedDay(null);
     setActiveMode(null);
   };
-
+  // Cycle stats 
   const { avgLength, avgCycle, nextPeriodDate, ovulationDate, fertileStart, fertileEnd, cycleRange } =
     useMemo(() => getPeriodStats(allLogs), [allLogs]);
 
+  // Calculate days until next period if we have a prediction
   const nextPeriodDays = nextPeriodDate
     ? Math.round((nextPeriodDate.getTime() - Date.now()) / 86400000)
     : null;
 
+  // Set of day numbers in the current month that have a PERIOD log, for quick lookup when rendering calendar
   const periodDaySet = new Set(
     logs
       .filter((l) => String(l?.type ?? "").toUpperCase() === "PERIOD")
@@ -677,20 +549,22 @@ export default function CalendarScreen() {
   );
 
   const today   = new Date();
+  //  check if a given day number corresponds to today (to show the dot indicator)
   const isToday = (d: number) =>
     d === today.getDate() &&
     date.getMonth() === today.getMonth() &&
     date.getFullYear() === today.getFullYear();
 
+  // Handle user swiping between the 2 panels 
   const onPanelScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_W);
     setPanelIndex(idx);
   };
 
   return (
-    <LinearGradient colors={[C.cream, "#FFF0F3", C.cream]} style={styles.screen}>
+    <LinearGradient colors={[C.cream, C.pinky, C.cream]} style={styles.screen}>
 
-      {/* ── Month Navigation ── */}
+      {/* Month Navigation */}
       <View style={styles.monthRow}>
         <TouchableOpacity
           onPress={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1, 1))}
@@ -707,7 +581,7 @@ export default function CalendarScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ── Calendar Grid ── */}
+      {/* Calendar Grid */}
       <View style={styles.calendarCard}>
         <View style={styles.weekRow}>
           {WEEK_DAYS.map((d) => (
@@ -735,7 +609,7 @@ export default function CalendarScreen() {
                 }}
                 style={[
                   styles.dayBox,
-                  isPeriod   && styles.dayBoxPeriod,
+                  isPeriod && styles.dayBoxPeriod,
                   isSelected && styles.dayBoxSelected,
                   inRange && !isSelected && styles.dayBoxRange,
                 ]}
@@ -743,7 +617,7 @@ export default function CalendarScreen() {
                 <Text
                   style={[
                     styles.dayText,
-                    isPeriod   && styles.dayTextPeriod,
+                    isPeriod && styles.dayTextPeriod,
                     isSelected && styles.dayTextSelected,
                     isTodayDay && !isSelected && styles.dayTextToday,
                   ]}
@@ -757,7 +631,7 @@ export default function CalendarScreen() {
         </View>
       </View>
 
-      {/* ── Panel Indicator ── */}
+      {/*  Panel Indicator  */}
       <View style={styles.panelIndicatorRow}>
         <TouchableOpacity
           onPress={() => panelScrollRef.current?.scrollTo({ x: 0, animated: true })}
@@ -772,7 +646,7 @@ export default function CalendarScreen() {
         </Text>
       </View>
 
-      {/* ── Swipeable Panel Area ── */}
+      {/* Swipeable Panel Area  */}
       <ScrollView
         ref={panelScrollRef}
         horizontal
@@ -782,7 +656,7 @@ export default function CalendarScreen() {
         scrollEventThrottle={16}
         style={styles.panelScroll}
       >
-        {/* ── Panel 0: Cycle Stats / Log Form ── */}
+        {/* Panel 0: Cycle Stats / Log Form */}
         <View style={{ width: SCREEN_W }}>
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -802,7 +676,7 @@ export default function CalendarScreen() {
                     label="Avg Period"
                     value={avgLength != null ? String(avgLength) : "--"}
                     unit="days"
-                    gradient={[C.lavender, "#E8C9F5"]}
+                    gradient={[C.lavender, C.purply]}
                   />
                 </View>
                 <View style={styles.statsRow}>
@@ -810,23 +684,23 @@ export default function CalendarScreen() {
                     label="Cycle Length"
                     value={avgCycle != null ? String(avgCycle) : "--"}
                     unit="days"
-                    gradient={[C.peach, "#FAD5B8"]}
+                    gradient={[C.peach, C.butter ]}
                   />
                   <StatCard
                     label="Ovulation"
                     value={
                       ovulationDate
-                        ? ovulationDate.toLocaleDateString("en-US", {
+                        ? ovulationDate.toLocaleDateString("en-UK", {
                             month: "short",
                             day: "numeric",
                           })
                         : "--"
                     }
-                    gradient={[C.mint, "#B8EAD8"]}
+                    gradient={[C.mint, C.minty]} 
                   />
                 </View>
                 <LinearGradient
-                  colors={["#FDE8F0", "#FAD5E2"]}
+                  colors={[C.lp, C.lpd]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.wideCard}
@@ -834,10 +708,10 @@ export default function CalendarScreen() {
                   <Text style={styles.wideCardLabel}>Fertile Window</Text>
                   <Text style={styles.wideCardValue}>
                     {fertileStart && fertileEnd
-                      ? `${fertileStart.toLocaleDateString("en-US", {
+                      ? `${fertileStart.toLocaleDateString("en-UK", {
                           month: "short",
                           day: "numeric",
-                        })} – ${fertileEnd.toLocaleDateString("en-US", {
+                        })} – ${fertileEnd.toLocaleDateString("en-UK", {
                           month: "short",
                           day: "numeric",
                         })}`
@@ -845,7 +719,7 @@ export default function CalendarScreen() {
                   </Text>
                 </LinearGradient>
                 <LinearGradient
-                  colors={["#EDE8FD", "#DDD5FA"]}
+                  colors={[C.blu, C.bluD]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.wideCard}
@@ -853,10 +727,10 @@ export default function CalendarScreen() {
                   <Text style={styles.wideCardLabel}>Cycle Range</Text>
                   <Text style={styles.wideCardValue}>
                     {cycleRange
-                      ? `${cycleRange.early.toLocaleDateString("en-US", {
+                      ? `${cycleRange.early.toLocaleDateString("en-UK", {
                           month: "short",
                           day: "numeric",
-                        })} – ${cycleRange.late.toLocaleDateString("en-US", {
+                        })} – ${cycleRange.late.toLocaleDateString("en-UK", {
                           month: "short",
                           day: "numeric",
                         })}`
@@ -890,7 +764,7 @@ export default function CalendarScreen() {
             {/* Period form */}
             {selectedDay !== null && activeMode === "PERIOD" && (
               <View style={styles.formCard}>
-                <LinearGradient colors={["#FFE8ED", "#FDD5DC"]} style={styles.formHeader}>
+                <LinearGradient colors={[C.rose, C.pinky]} style={styles.formHeader}>
                   <Text style={styles.formTitle}>Period Log</Text>
                   <Text style={styles.formSubtitle}>
                     {new Date(
@@ -929,7 +803,7 @@ export default function CalendarScreen() {
                       <Text style={styles.dateBtnLabel}>End</Text>
                       <Text style={styles.dateBtnValue}>
                         {periodEnd
-                          ? periodEnd.toLocaleDateString("en-US", {
+                          ? periodEnd.toLocaleDateString("en-UK", {
                               month: "short",
                               day: "numeric",
                             })
@@ -961,12 +835,7 @@ export default function CalendarScreen() {
                   <SectionLabel>Flow Intensity</SectionLabel>
                   <PillRow>
                     {BLEEDING_OPTIONS.map((b) => (
-                      <OptionPill
-                        key={b}
-                        label={b}
-                        selected={bleeding === b}
-                        onPress={() => setBleeding(b)}
-                      />
+                      <OptionPill key={b} label={b} selected={bleeding === b} onPress={() => setBleeding(b)}/>
                     ))}
                   </PillRow>
 
@@ -1006,9 +875,6 @@ export default function CalendarScreen() {
                     ))}
                   </View>
 
-                  <SectionLabel>Pad / Tampon Changes</SectionLabel>
-                  <DotSlider value={padChanges} max={6} onChange={setPadChanges} color={C.peachDark} />
-
                   <SectionLabel>Notes</SectionLabel>
                   <TextInput
                     style={styles.notesInput}
@@ -1042,14 +908,14 @@ export default function CalendarScreen() {
             {/* PCOS log form */}
             {selectedDay !== null && activeMode === "PCOS" && (
               <View style={styles.formCard}>
-                <LinearGradient colors={["#EDE8FD", "#DDD5FA"]} style={styles.formHeader}>
+                <LinearGradient colors={[C.blu, C.bluD]} style={styles.formHeader}>
                   <Text style={styles.formTitle}>PCOS Log</Text>
                   <Text style={styles.formSubtitle}>
                     {new Date(
                       date.getFullYear(),
                       date.getMonth(),
                       selectedDay
-                    ).toLocaleDateString("en-US", {
+                    ).toLocaleDateString("en-UK", {
                       weekday: "long",
                       month: "long",
                       day: "numeric",
@@ -1163,7 +1029,7 @@ export default function CalendarScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
                       <LinearGradient
-                        colors={[C.lavDark, "#8A55A8"]}
+                        colors={[C.lavDark, C.darklavender]}
                         style={styles.saveBtnGradient}
                       >
                         <Text style={styles.saveBtnText}>Save</Text>
@@ -1176,7 +1042,7 @@ export default function CalendarScreen() {
           </ScrollView>
         </View>
 
-        {/* ── Panel 1: PCOS Trends ── */}
+        {/* Panel 1: PCOS Trends  */}
         <View style={{ width: SCREEN_W }}>
           <PCOSTrendsPanel allLogs={allLogs} getDetailLog={getDetailLog} />
         </View>
@@ -1185,20 +1051,12 @@ export default function CalendarScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// Styles 
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingTop: 16 },
 
-  monthRow: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingHorizontal: 20, marginBottom: 12, marginTop: 60,
-  },
-  arrowBtn: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: C.white,
-    alignItems: "center", justifyContent: "center",
-    shadowColor: C.rose, shadowOpacity: 0.2, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 }, elevation: 3,
-  },
+  monthRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between",paddingHorizontal: 20, marginBottom: 12, marginTop: 60,},
+  arrowBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.white, alignItems: "center", justifyContent: "center", shadowColor: C.rose, shadowOpacity: 0.2, shadowRadius: 6,shadowOffset: { width: 0, height: 2 }, elevation: 3,},
   arrowText: { fontSize: 22, color: C.roseDark, lineHeight: 26 },
   monthText: { fontSize: 18, fontWeight: "700", color: C.textDark, letterSpacing: 0.3 },
 
@@ -1206,54 +1064,49 @@ const styles = StyleSheet.create({
     marginHorizontal: 16, backgroundColor: C.white, borderRadius: 24, padding: 12,
     shadowColor: C.rose, shadowOpacity: 0.12, shadowRadius: 16,
     shadowOffset: { width: 0, height: 4 }, elevation: 4,
-    marginBottom: 6, paddingBottom: 8,
-  },
-  weekRow:  { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
-  weekDay:  {
-    width: "14%", textAlign: "center", fontSize: 11,
-    fontWeight: "700", color: C.textLight, letterSpacing: 0.5,
-  },
-  daysGrid: { flexDirection: "row", flexWrap: "wrap" },
+    marginBottom: 6, paddingBottom: 8,},
+  weekRow:{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  weekDay:{width: "14%", textAlign: "center", fontSize: 11,fontWeight: "700", color: C.textLight, letterSpacing: 0.5,},daysGrid: { flexDirection: "row", flexWrap: "wrap" },
 
-  dayBox:         { width: "14%", height: 44, alignItems: "center", justifyContent: "center", borderRadius: 12, marginBottom: 2 },
-  dayBoxPeriod:   { backgroundColor: C.blush },
+  dayBox:{ width: "14%", height: 44, alignItems: "center", justifyContent: "center", borderRadius: 12, marginBottom: 2 },
+  dayBoxPeriod: { backgroundColor: C.blush },
   dayBoxSelected: {
     backgroundColor: C.roseDark,
     shadowColor: C.roseDark, shadowOpacity: 0.4, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
-  dayBoxRange:        { backgroundColor: "#FDEAF0" },
-  dayText:            { fontSize: 14, fontWeight: "600", color: C.textDark },
-  dayTextPeriod:      { color: C.roseDark },
-  dayTextSelected:    { color: C.white, fontWeight: "800" },
-  dayTextToday:       { color: C.rose, fontWeight: "800" },
-  todayDot:           { width: 4, height: 4, borderRadius: 2, backgroundColor: C.rose, marginTop: 1 },
+  dayBoxRange: { backgroundColor: C.pinky },
+  dayText: { fontSize: 14, fontWeight: "600", color: C.textDark },
+  dayTextPeriod: { color: C.roseDark },
+  dayTextSelected: { color: C.white, fontWeight: "800" },
+  dayTextToday: { color: C.rose, fontWeight: "800" },
+  todayDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: C.rose, marginTop: 1 },
 
   panelIndicatorRow: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 20, marginBottom: 6, gap: 6,
   },
-  panelDot:       { width: 6, height: 6, borderRadius: 3, backgroundColor: C.roseLight },
+  panelDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.roseLight },
   panelDotActive: { backgroundColor: C.roseDark, width: 18 },
-  swipeHint:      { fontSize: 11, color: C.textLight, fontWeight: "600", marginLeft: 4 },
+  swipeHint: { fontSize: 11, color: C.textLight, fontWeight: "600", marginLeft: 4 },
 
   panelScroll: { flex: 1 },
   cardContent: { paddingHorizontal: 16, paddingBottom: 40 },
 
   cardTitle: { fontSize: 17, fontWeight: "800", color: C.textDark, marginBottom: 14, letterSpacing: 0.2 },
-  statsRow:  { flexDirection: "row", gap: 12, marginBottom: 12 },
-  statCard:  {
+  statsRow: { flexDirection: "row", gap: 12, marginBottom: 12 },
+  statCard: {
     flex: 1, borderRadius: 20, padding: 16, minHeight: 90, justifyContent: "space-between",
-    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8,
+    shadowColor: C.black , shadowOpacity: 0.06, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   statCardLabel: { fontSize: 11, fontWeight: "700", color: C.textMid, letterSpacing: 0.8, textTransform: "uppercase" },
   statCardValue: { fontSize: 30, fontWeight: "900", color: C.textDark },
-  statCardUnit:  { fontSize: 12, fontWeight: "600", color: C.textLight },
+  statCardUnit: { fontSize: 12, fontWeight: "600", color: C.textLight },
 
   wideCard: {
     borderRadius: 20, padding: 16, marginBottom: 12,
-    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8,
+    shadowColor: C.black , shadowOpacity: 0.06, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
   wideCardLabel: { fontSize: 13, fontWeight: "700", color: C.textMid, marginBottom: 6 },
@@ -1263,11 +1116,11 @@ const styles = StyleSheet.create({
   modePill: {
     flex: 1, paddingVertical: 12, borderRadius: 16, backgroundColor: C.white,
     alignItems: "center", borderWidth: 1.5, borderColor: C.border,
-    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 6,
+    shadowColor: C.black , shadowOpacity: 0.05, shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
   },
-  modePillActive:     { backgroundColor: C.roseDark, borderColor: C.roseDark },
-  modePillText:       { fontSize: 14, fontWeight: "700", color: C.textMid },
+  modePillActive: { backgroundColor: C.roseDark, borderColor: C.roseDark },
+  modePillText:{ fontSize: 14, fontWeight: "700", color: C.textMid },
   modePillTextActive: { color: C.white },
 
   formCard: {
@@ -1275,41 +1128,58 @@ const styles = StyleSheet.create({
     shadowColor: C.rose, shadowOpacity: 0.1, shadowRadius: 16,
     shadowOffset: { width: 0, height: 4 }, elevation: 4,
   },
-  formHeader:   { padding: 20, paddingBottom: 16 },
-  formTitle:    { fontSize: 20, fontWeight: "900", color: C.textDark },
+  formHeader: { padding: 20, paddingBottom: 16 },
+  formTitle: { fontSize: 20, fontWeight: "900", color: C.textDark },
   formSubtitle: { fontSize: 13, color: C.textMid, marginTop: 2 },
-  formBody:     { padding: 20 },
+  formBody: { padding: 20 },
   sectionLabel: {
     fontSize: 13, fontWeight: "700", color: C.textMid, marginTop: 16, marginBottom: 4,
     letterSpacing: 0.4, textTransform: "uppercase",
   },
 
-  dateRow:      { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 8 },
-  dateBtn:      { flex: 1, backgroundColor: C.blush, borderRadius: 14, padding: 12, alignItems: "center" },
+  dateRow: { flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 8 },
+  dateBtn: { flex: 1, backgroundColor: C.blush, borderRadius: 14, padding: 12, alignItems: "center" },
   dateBtnLabel: { fontSize: 11, fontWeight: "700", color: C.textLight, textTransform: "uppercase", letterSpacing: 0.5 },
   dateBtnValue: { fontSize: 15, fontWeight: "800", color: C.roseDark, marginTop: 2 },
   dateSeparator:{ fontSize: 18, color: C.textLight },
 
-  optionPill:             { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#FFF0F3", borderWidth: 1.5, borderColor: C.border },
-  optionPillSelected:     { backgroundColor: C.roseDark, borderColor: C.roseDark },
-  optionPillText:         { fontSize: 13, fontWeight: "600", color: C.textMid },
+  optionPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: C.pinky, borderWidth: 1.5, borderColor: C.border },
+  optionPillSelected: { backgroundColor: C.roseDark, borderColor: C.roseDark },
+  optionPillText: { fontSize: 13, fontWeight: "600", color: C.textMid },
   optionPillTextSelected: { color: C.white },
 
   dotSliderRow: { flexDirection: "row", gap: 8, marginVertical: 8, alignItems: "center" },
-  dotSliderDot: { flex: 1, height: 8, borderRadius: 4, backgroundColor: "#F0E0E5" },
+  dotSliderDot: { flex: 1, height: 8, borderRadius: 4, backgroundColor: C.pinky},
 
-  moodRow:               { flexDirection: "row", gap: 8, marginVertical: 8 },
-  moodBtn:               { width: 48, height: 48, borderRadius: 24, backgroundColor: "#FFF0F3", alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: C.border },
-  moodBtnSelected:       { backgroundColor: C.roseDark, borderColor: C.roseDark },
+  moodRow: { flexDirection: "row", gap: 8, marginVertical: 8 },
+  moodBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: C.pinky, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: C.border },
+  moodBtnSelected: { backgroundColor: C.roseDark, borderColor: C.roseDark },
   moodBtnSelectedPurple: { backgroundColor: C.lavDark, borderColor: C.lavDark },
-  moodEmoji:             { fontSize: 22 },
+  moodEmoji: { fontSize: 22 },
 
-  notesInput: { backgroundColor: "#FFF8FA", borderRadius: 14, fontSize: 14, minHeight: 80, marginTop: 4 },
+  notesInput: { backgroundColor: C.pinky, borderRadius: 14, fontSize: 14, minHeight: 80, marginTop: 4 },
 
-  actionRow:       { flexDirection: "row", gap: 12, marginTop: 24 },
-  cancelBtn:       { flex: 1, paddingVertical: 14, borderRadius: 16, backgroundColor: "#F5E8EB", alignItems: "center" },
-  cancelBtnText:   { fontSize: 15, fontWeight: "700", color: C.textMid },
-  saveBtn:         { flex: 1, borderRadius: 16, overflow: "hidden" },
+  actionRow: { flexDirection: "row", gap: 12, marginTop: 24 },
+  cancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 16, backgroundColor: C.pinky, alignItems: "center" },
+  cancelBtnText: { fontSize: 15, fontWeight: "700", color: C.textMid },
+  saveBtn: { flex: 1, borderRadius: 16, overflow: "hidden" },
   saveBtnGradient: { paddingVertical: 14, alignItems: "center" },
-  saveBtnText:     { fontSize: 15, fontWeight: "800", color: C.white, letterSpacing: 0.3 },
+  saveBtnText: { fontSize: 15, fontWeight: "800", color: C.white, letterSpacing: 0.3 },
+});
+
+const tp = StyleSheet.create({
+  scroll: { paddingHorizontal: 16, paddingBottom: 40 },
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, paddingTop: 60 },
+  emptyEmoji: { fontSize: 48, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "800", color: C.textDark, marginBottom: 8 },
+  emptyBody: { fontSize: 14, color: C.textLight, textAlign: "center", lineHeight: 20, fontWeight: "600" },
+  pageTitle: { fontSize: 17, fontWeight: "800", color: C.textDark, marginBottom: 14, letterSpacing: 0.2 },
+  sectionTitle: {fontSize: 13, fontWeight: "800", color: C.textMid, textTransform: "uppercase",letterSpacing: 0.6, marginBottom: 10, marginTop: 8,},
+  sympCard: {backgroundColor: C.white, borderRadius: 20, padding: 16, marginBottom: 16,borderWidth: 1, borderColor: C.border,},
+  sympRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
+  sympEmoji: { fontSize: 14, width: 20 },
+  sympLabel: { fontSize: 12, fontWeight: "700", color: C.textMid, width: 96 },
+  sympBarTrack: { flex: 1, height: 8, backgroundColor: "#F0E5F0", borderRadius: 4, overflow: "hidden" },
+  sympBarFill: { height: 8, borderRadius: 4 },
+  sympPct: { fontSize: 11, fontWeight: "800", width: 34, textAlign: "right" },
 });

@@ -1,11 +1,5 @@
 import { ID, Permission, Query, Role } from "react-native-appwrite";
-import {
-  account,
-  databases,
-  DATABASE_ID,
-  STEPS_DAILY_COLLECTION_ID,
-  STEPS_GOALS_COLLECTION_ID,
-} from "@/lib/appwrite";
+import {account,databases,DATABASE_ID,STEPS_DAILY_COLLECTION_ID,STEPS_GOALS_COLLECTION_ID,} from "@/lib/appwrite";
 
 export async function getStepsDaily(start: Date, end: Date) {
   const user = await account.get();

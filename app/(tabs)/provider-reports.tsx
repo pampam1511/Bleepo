@@ -54,6 +54,7 @@ function SymptomPill({ label }: { label: string }) {
     </View>
   );
 }
+// Simple pill component for displaying symptoms or tags
 const sp = StyleSheet.create({
   pill: { backgroundColor: C.lavender, borderRadius: 12, paddingHorizontal: 12,
     paddingVertical: 5, marginRight: 6, marginBottom: 6 },
@@ -86,18 +87,20 @@ export default function ProviderReportsScreen() {
       }
     })();
   }, []);
-
+// Extract patients from reports for the selector
   const patients = useMemo(() => {
     const map = new Map<string, string>();
     reports.forEach((r) => map.set(r.patientId, r.patientName ?? "Patient"));
     return Array.from(map.entries()).map(([patientId, patientName]) => ({ patientId, patientName }));
   }, [reports]);
 
+  // Filter reports based on selected patient
   const visibleReports = useMemo(
     () => selectedUser ? reports.filter((r) => r.patientId === selectedUser) : reports,
     [reports, selectedUser]
   );
 
+  // Show loading state while fetching reports
   if (loading) {
     return (
       <View style={styles.loadingWrap}>
@@ -155,17 +158,17 @@ export default function ProviderReportsScreen() {
             : typeof p.symptoms === "string" && p.symptoms
             ? p.symptoms.split(",").map((s: string) => s.trim()).filter(Boolean)
             : [];
-
+          
           const pcosSymptoms: string[] = Array.isArray(p.pcosSymptoms)
             ? p.pcosSymptoms
             : typeof p.pcosSymptoms === "string" && p.pcosSymptoms
             ? p.pcosSymptoms.split(",").map((s: string) => s.trim()).filter(Boolean)
             : [];
-
+          
           return (
             <View key={r.$id} style={styles.reportBlock}>
 
-              {/* ── Activity ── */}
+              {/*  Activity  */}
               <SectionCard title="Activity" gradient={[C.peach, "#F5D5B8"]}>
                 <DataRow label="Total Steps"       value={(p.stepsTotal ?? 0).toLocaleString()} />
                 <DataRow label="Avg Steps / Day"   value={(p.stepsAvgPerDay ?? 0).toLocaleString()} />
@@ -174,7 +177,7 @@ export default function ProviderReportsScreen() {
                 <DataRow label="Calories Burned"    value={`${p.caloriesBurned ?? 0} kcal`} />
               </SectionCard>
 
-              {/* ── Nutrition ── */}
+              {/*  Nutrition */}
               <SectionCard title="Nutrition"  gradient={[C.mint, "#B8EAD8"]}>
                 <DataRow label="Calorie Intake"     value={`${p.calIntakeTotal ?? 0} kcal`} />
                 <DataRow label="Calorie Goal"        value={`${p.calGoal ?? 0} kcal`} />
@@ -183,7 +186,7 @@ export default function ProviderReportsScreen() {
                 <DataRow label="Avg Fat / Day"      value={`${p.fatAvg ?? 0}g`} />
               </SectionCard>
 
-              {/* ── Weight ── */}
+              {/* Weight  */}
               {(p.weightKg || p.weightGoalKg) && (
                 <SectionCard title="Weight" gradient={[C.lavender, "#E2C8F0"]}>
                   <DataRow label="Current Weight"  value={p.weightKg ? `${p.weightKg} kg` : "—"} />
@@ -192,7 +195,7 @@ export default function ProviderReportsScreen() {
                 </SectionCard>
               )}
 
-              {/* ── Menstrual / Period symptoms ── */}
+              {/* Menstrual / Period symptoms */}
               <SectionCard title="Menstrual Health"  gradient={["#FDE8ED", C.blush]}>
                 <DataRow label="Cycle Length"      value={p.cycleLength      ? `${p.cycleLength} days`  : "—"} />
                 <DataRow label="Period Length"     value={p.periodLength     ? `${p.periodLength} days` : "—"} />
@@ -212,7 +215,7 @@ export default function ProviderReportsScreen() {
                 )}
               </SectionCard>
 
-              {/* ── PCOS symptoms ── */}
+              {/* PCOS symptoms  */}
               {(pcosSymptoms.length > 0 || p.pcosRisk) && (
                 <SectionCard title="PCOS Indicators" gradient={["#F3E8FD", C.lavender]}>
                   {p.pcosRisk && <DataRow label="Risk Level" value={p.pcosRisk} />}
@@ -227,7 +230,7 @@ export default function ProviderReportsScreen() {
                 </SectionCard>
               )}
 
-              {/* ── Mood & general notes ── */}
+              {/* Mood & general notes  */}
               {(p.moodAvg || p.notes) && (
                 <SectionCard title="Mood & Notes"  gradient={[C.peach, "#FAD8C0"]}>
                   {p.moodAvg   && <DataRow label="Avg Mood Score" value={`${p.moodAvg} / 10`} />}
@@ -248,15 +251,15 @@ export default function ProviderReportsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen:      { flex: 1 },
-  scroll:      { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 48 },
+  screen: { flex: 1 },
+  scroll: { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 48 },
   loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: C.cream, gap: 12 },
-  loadingTxt:  { color: C.textMid, fontWeight: "600" },
+  loadingTxt: { color: C.textMid, fontWeight: "600" },
 
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, marginTop: 60 },
-  title:     { fontSize: 26, fontWeight: "900", color: C.textDark },
-  subtitle:  { fontSize: 13, color: C.textLight, fontWeight: "600", marginTop: 2 },
-  signOutBtn:{ backgroundColor: C.blush, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, borderColor: C.roseLight, borderWidth: 1,alignSelf: "center",  },
+  title: { fontSize: 26, fontWeight: "900", color: C.textDark },
+  subtitle: { fontSize: 13, color: C.textLight, fontWeight: "600", marginTop: 2 },
+  signOutBtn: { backgroundColor: C.blush, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, borderColor: C.roseLight, borderWidth: 1,alignSelf: "center",  },
   signOutTxt:{ fontSize: 13, fontWeight: "700", color: C.roseDark },
 
   patientRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -266,7 +269,7 @@ const styles = StyleSheet.create({
   patientTxtActive:  { color: C.white },
 
   muted: { color: C.textLight, fontWeight: "600", fontSize: 13 },
-  emptyCard:  { backgroundColor: C.white, borderRadius: 20, padding: 32, alignItems: "center", marginBottom: 16 },
+  emptyCard: { backgroundColor: C.white, borderRadius: 20, padding: 32, alignItems: "center", marginBottom: 16 },
   emptyEmoji: { fontSize: 40, marginBottom: 8 },
 
   reportBlock:{ marginBottom: 24 },

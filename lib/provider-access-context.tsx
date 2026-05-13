@@ -6,26 +6,26 @@ import { account, databases,DATABASE_ID, USER_PROFILE_COLLECTION_ID, PROVIDER_AC
 type ReportRange = "WEEKLY" | "MONTHLY" | "YEARLY";
 
 type PublishReportInput = {
-  range:       ReportRange;
+  range: ReportRange;
   periodStart: string;
-  periodEnd:   string;
-  reportJson:  Record<string, any>; // should include steps, calories, symptoms, period data etc.
+  periodEnd: string;
+  reportJson: Record<string, any>; // should include steps, calories, symptoms, period data etc.
 };
 
 type ProviderReportContextType = {
-  listProviders:                      () => Promise<any[]>;
-  getMyProviders:                     () => Promise<any[]>;
-  grantAccess:                        (providerId: string) => Promise<void>;
-  revokeAccess:                       (providerId: string) => Promise<void>;
-  publishReportForActiveProviders:    (input: PublishReportInput) => Promise<void>;
-  getReportsForProvider:              () => Promise<any[]>;
+  listProviders: () => Promise<any[]>;
+  getMyProviders: () => Promise<any[]>;
+  grantAccess:(providerId: string) => Promise<void>;
+  revokeAccess:(providerId: string) => Promise<void>;
+  publishReportForActiveProviders: (input: PublishReportInput) => Promise<void>;
+  getReportsForProvider:() => Promise<any[]>;
 };
 
 const ProviderReportContext = createContext<ProviderReportContextType | undefined>(undefined);
 
 export function ProviderReportProvider({ children }: { children: React.ReactNode }) {
 
-  // ── List all provider accounts so patients can choose who to grant access to
+  // List all provider accounts so patients can choose who to grant access to
   const listProviders = async () => {
     const res = await databases.listDocuments(DATABASE_ID, USER_PROFILE_COLLECTION_ID, [
       Query.equal("role", "provider"),
@@ -33,17 +33,17 @@ export function ProviderReportProvider({ children }: { children: React.ReactNode
     return res.documents;
   };
 
-  // ── Get providers the current patient has granted access to
+  // Get providers the current patient has granted access to
   const getMyProviders = async () => {
     const user = await account.get();
     const res  = await databases.listDocuments(DATABASE_ID, PROVIDER_ACCESS, [
       Query.equal("patientId", user.$id),
-      Query.equal("status",    "active"),
+      Query.equal("status", "active"),
     ]);
     return res.documents;
   };
 
-  // ── Grant a provider access to the patient's reports
+  // Grant a provider access to the patient's reports
   const grantAccess = async (providerId: string) => {
     const user = await account.get();
 
@@ -75,7 +75,7 @@ export function ProviderReportProvider({ children }: { children: React.ReactNode
     const user = await account.get();
 
     const links = await databases.listDocuments(DATABASE_ID, PROVIDER_ACCESS, [
-      Query.equal("patientId",  user.$id),
+      Query.equal("patientId", user.$id),
       Query.equal("providerId", providerId),
     ]);
     for (const doc of links.documents) {
@@ -83,7 +83,7 @@ export function ProviderReportProvider({ children }: { children: React.ReactNode
     }
 
     const shared = await databases.listDocuments(DATABASE_ID, SHARED_REPORTS, [
-      Query.equal("patientId",  user.$id),
+      Query.equal("patientId", user.$id),
       Query.equal("providerId", providerId),
     ]);
     for (const report of shared.documents) {
@@ -91,7 +91,7 @@ export function ProviderReportProvider({ children }: { children: React.ReactNode
     }
   };
 
-  // ── Publish a report to all currently active providers
+  // Publish a report to all currently active providers
   // reportJson should include ALL health data: steps, calories, symptoms, period logs etc.
   const publishReportForActiveProviders = async (input: PublishReportInput) => {
     const user = await account.get();
@@ -103,7 +103,7 @@ export function ProviderReportProvider({ children }: { children: React.ReactNode
 
     const activeProviders = await databases.listDocuments(DATABASE_ID, PROVIDER_ACCESS, [
       Query.equal("patientId", user.$id),
-      Query.equal("status",    "active"),
+      Query.equal("status", "active"),
     ]);
 
     for (const link of activeProviders.documents) {
@@ -116,18 +116,18 @@ export function ProviderReportProvider({ children }: { children: React.ReactNode
       await databases.createDocument(
         DATABASE_ID, SHARED_REPORTS, ID.unique(),
         {
-          patientId:   user.$id,
+          patientId: user.$id,
           patientName,
           providerId,
-          range:       input.range,
+          range: input.range,
           periodStart: input.periodStart,
-          periodEnd:   input.periodEnd,
-          reportJson:  JSON.stringify(input.reportJson),
-          createdAt:   new Date().toISOString(),
+          periodEnd:input.periodEnd,
+          reportJson: JSON.stringify(input.reportJson),
+          createdAt: new Date().toISOString(),
         },
         [
-          Permission.read(Role.user(user.$id)),       // patient can read their own report
-          Permission.read(Role.user(providerId)),      // ✅ FIX: provider can read reports shared with them
+          Permission.read(Role.user(user.$id)),// patient can read their own report
+          Permission.read(Role.user(providerId)),      
           Permission.update(Role.user(user.$id)),
           Permission.delete(Role.user(user.$id)),
         ]

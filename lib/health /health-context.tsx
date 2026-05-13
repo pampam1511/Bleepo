@@ -83,9 +83,9 @@ type HealthContextType = {
   calculateBMI:  (weightKg: number, heightCm: number) => number;
   bmiCategory:   (bmi: number) => string;
   // PCOS
-  savePCOSLog:   (date: string, payload: PCOSPayload) => Promise<void>;
-  getPCOSLog:    (date: string) => Promise<PCOSLog | null>;
-  getPCOSLogs:   (startDate: Date, endDate: Date) => Promise<PCOSLog[]>;
+  savePCOSLog: (date: string, payload: PCOSPayload) => Promise<void>;
+  getPCOSLog: (date: string) => Promise<PCOSLog | null>;
+  getPCOSLogs: (startDate: Date, endDate: Date) => Promise<PCOSLog[]>;
   getPCOSTrends: (limitDays?: number) => Promise<PCOSTrends>;
   getPCOSStreak: () => Promise<number>;
 };

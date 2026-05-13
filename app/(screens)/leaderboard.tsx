@@ -3,47 +3,20 @@ import { useCommunity } from "@/lib/community-context";
 import { useHealth } from "@/lib/health /health-context";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import {ActivityIndicator,Modal,Pressable,ScrollView,StyleSheet,Text,TextInput,TouchableOpacity,View,} from "react-native";
 
-const C = {
-  bg:        "#FFF8F5",
-  white:     "#FFFFFF",
-  rose:      "#E8929A",
-  roseDark:  "#C45C6A",
-  roseLight: "#F9C5C9",
-  blush:     "#FADADD",
-  mint:      "#D4F0E8",
-  mintDark:  "#6BBFA3",
-  peach:     "#FAE5D3",
-  peachDark: "#E8A87C",
-  lavender:  "#EDD9F5",
-  lavDark:   "#B07CC6",
-  gold:      "#F5C842",
-  silver:    "#C0C0C0",
-  bronze:    "#CD7F32",
-  textDark:  "#3D2030",
-  textMid:   "#7A4F5A",
-  textLight: "#B08090",
-  border:    "#F0D5DA",
+// Colour palette 
+const C = {blush:"#FADADD", roseLight: "#F9C5C9", rose:"#E8929A", roseDark: "#C45C6A", bg:"#FFF8F5",
+          lavender:"#EDD9F5",lavDark:"#B07CC6", peach:"#FAE5D3", peachDark: "#E8A87C", pimp: "#FDE8ED",
+          mint:"#D4F0E8", mintDark:"#6BBFA3", cream:"#FFF8F5", white: "#FFFFFF", pinky: "#F0D5DA",
+          textDark:"#3D2030", textMid:"#7A4F5A", textLight: "#B08090", border:"#F0D5DA",gold:"#F5C842",
+          silver:"#C0C0C0", bronze:"#CD7F32",
 };
-
-// ── Sub-components ────────────────────────────────────────────────────────────
 
 function SectionCard({ title, emoji, children }: { title: string; emoji: string; children: React.ReactNode }) {
   return (
     <View style={sc.card}>
       <View style={sc.header}>
-        <Text style={sc.emoji}>{emoji}</Text>
         <Text style={sc.title}>{title}</Text>
       </View>
       <View style={sc.body}>{children}</View>
@@ -51,15 +24,14 @@ function SectionCard({ title, emoji, children }: { title: string; emoji: string;
   );
 }
 const sc = StyleSheet.create({
-  card:   { backgroundColor: C.white, borderRadius: 20, marginBottom: 16, overflow: "hidden",
-    shadowColor: C.rose, shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  header: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#FDE8ED",
-    paddingHorizontal: 16, paddingVertical: 14 },
-  emoji:  { fontSize: 18 },
-  title:  { fontSize: 15, fontWeight: "800", color: C.textDark },
-  body:   { padding: 16 },
+  card:{ backgroundColor: C.white, borderRadius: 20, marginBottom: 16, overflow: "hidden",shadowColor: C.rose, shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  header: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: C.pimp,paddingHorizontal: 16, paddingVertical: 14 },
+  emoji: { fontSize: 18 },
+  title:{ fontSize: 15, fontWeight: "800", color: C.textDark },
+  body: { padding: 16 },
 });
 
+//enders a single row in the leaderboard table, showing rank, name, steps, and points. If isMe is true, highlights the row.
 function LeaderRow({ rank, name, steps, points, isMe }: {
   rank: number; name: string; steps: number; points: number; isMe?: boolean;
 }) {
@@ -83,23 +55,20 @@ function LeaderRow({ rank, name, steps, points, isMe }: {
   );
 }
 const lr = StyleSheet.create({
-  row:          { flexDirection: "row", alignItems: "center", paddingVertical: 10,
-    borderBottomWidth: 1, borderBottomColor: "#F5EAED", gap: 10 },
-  rowMe:        { backgroundColor: "#FFF0F3", borderRadius: 12, paddingHorizontal: 8,
-    borderBottomWidth: 0, marginVertical: 2 },
-  rankBox:      { width: 32, alignItems: "center" },
-  medal:        { fontSize: 20 },
-  rankNum:      { fontSize: 14, fontWeight: "800", color: C.textMid },
-  name:         { flex: 1, fontSize: 14, fontWeight: "700", color: C.textDark },
-  nameMe:       { color: C.roseDark },
-  statsBox:     { alignItems: "flex-end", minWidth: 64 },
-  steps:        { fontSize: 13, fontWeight: "800", color: C.textDark },
-  stepsLbl:     { fontSize: 9, color: C.textLight, fontWeight: "600" },
-  pointsPill:   { backgroundColor: "#F5EAED", borderRadius: 10, paddingHorizontal: 10,
-    paddingVertical: 4, minWidth: 56, alignItems: "center" },
+  row: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F5EAED", gap: 10 },
+  rowMe: { backgroundColor: C.pimp, borderRadius: 12, paddingHorizontal: 8, borderBottomWidth: 0, marginVertical: 2 },
+  rankBox: { width: 32, alignItems: "center" },
+  medal: { fontSize: 20 },
+  rankNum: { fontSize: 14, fontWeight: "800", color: C.textMid },
+  name: { flex: 1, fontSize: 14, fontWeight: "700", color: C.textDark },
+  nameMe: { color: C.roseDark },
+  statsBox:{ alignItems: "flex-end", minWidth: 64 },
+  steps: { fontSize: 13, fontWeight: "800", color: C.textDark },
+  stepsLbl: { fontSize: 9, color: C.textLight, fontWeight: "600" },
+  pointsPill: { backgroundColor: C.pimp, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, minWidth: 56, alignItems: "center" },
   pointsPillMe: { backgroundColor: C.roseDark },
-  pointsTxt:    { fontSize: 12, fontWeight: "800", color: C.roseDark },
-  pointsTxtMe:  { color: C.white },
+  pointsTxt:{ fontSize: 12, fontWeight: "800", color: C.roseDark },
+  pointsTxtMe:{ color: C.white },
 });
 
 function ChallengeCard({
@@ -118,8 +87,8 @@ function ChallengeCard({
   loading: boolean;
 }) {
   const start = new Date(challenge.startDate);
-  const end   = new Date(challenge.endDate);
-  const now   = new Date();
+  const end = new Date(challenge.endDate);
+  const now = new Date();
   const active = now >= start && now <= end;
   const statusColor = active ? C.mintDark : now > end ? C.textLight : C.peachDark;
   const statusLabel = active ? "Active" : now > end ? "Ended" : "Upcoming";
@@ -165,24 +134,21 @@ function ChallengeCard({
   );
 }
 const cc = StyleSheet.create({
-  card:           { backgroundColor: "#FFF5F7", borderRadius: 16, padding: 14, marginBottom: 12,
-    borderWidth: 1.5, borderColor: C.border },
-  cardSelected:   { borderColor: C.roseDark, backgroundColor: "#FFF0F3" },
-  topRow:         { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
-  title:          { flex: 1, fontSize: 15, fontWeight: "800", color: C.textDark, marginRight: 8 },
-  statusPill:     { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
-  statusTxt:      { fontSize: 11, fontWeight: "800" },
-  meta:           { fontSize: 12, color: C.textMid, fontWeight: "600", marginBottom: 4 },
-  joinBtn:        { marginTop: 10, backgroundColor: C.roseDark, borderRadius: 12,
-    paddingVertical: 10, alignItems: "center" },
+  card: { backgroundColor: C.pimp, borderRadius: 16, padding: 14, marginBottom: 12,borderWidth: 1.5, borderColor: C.border },
+  cardSelected: { borderColor: C.roseDark, backgroundColor:C.roseLight },
+  topRow:{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  title: { flex: 1, fontSize: 15, fontWeight: "800", color: C.textDark, marginRight: 8 },
+  statusPill: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
+  statusTxt: { fontSize: 11, fontWeight: "800" },
+  meta: { fontSize: 12, color: C.textMid, fontWeight: "600", marginBottom: 4 },
+  joinBtn: { marginTop: 10, backgroundColor: C.roseDark, borderRadius: 12,paddingVertical: 10, alignItems: "center" },
   joinBtnDisabled:{ opacity: 0.6 },
-  joinTxt:        { color: C.white, fontWeight: "800", fontSize: 14 },
-  joinedBadge:    { marginTop: 10, backgroundColor: C.mint, borderRadius: 12,
-    paddingVertical: 8, alignItems: "center", borderWidth: 1, borderColor: C.mintDark },
-  joinedTxt:      { color: C.mintDark, fontWeight: "800", fontSize: 13 },
+  joinTxt: { color: C.white, fontWeight: "800", fontSize: 14 },
+  joinedBadge: { marginTop: 10, backgroundColor: C.mint, borderRadius: 12,paddingVertical: 8, alignItems: "center", borderWidth: 1, borderColor: C.mintDark },
+  joinedTxt: { color: C.mintDark, fontWeight: "800", fontSize: 13 },
 });
 
-// ── Modal for creating a challenge ───────────────────────────────────────────
+// Modal for creating a challenge 
 function CreateChallengeModal({
   visible,
   onClose,
@@ -198,12 +164,12 @@ function CreateChallengeModal({
     endDate: string;
   }) => Promise<void>;
 }) {
-  const [title,     setTitle]     = useState("");
+  const [title, setTitle] = useState("");
   const [goalSteps, setGoalSteps] = useState("50000");
-  const [type,      setType]      = useState<"open" | "invite">("open");
+  const [type, setType] = useState<"open" | "invite">("open");
   const [startDate, setStartDate] = useState("");
-  const [endDate,   setEndDate]   = useState("");
-  const [saving,    setSaving]    = useState(false);
+  const [endDate, setEndDate] = useState("");
+  const [saving, setSaving] = useState(false);
 
   // Default start = today, end = 7 days from now
   useEffect(() => {
@@ -224,7 +190,7 @@ function CreateChallengeModal({
         type,
         goalSteps: Number(goalSteps),
         startDate: new Date(startDate).toISOString(),
-        endDate:   new Date(endDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
       });
       setTitle(""); setGoalSteps("50000"); setType("open");
       onClose();
@@ -262,13 +228,13 @@ function CreateChallengeModal({
             ))}
           </View>
 
-          <Text style={cm.label}>Start Date (YYYY-MM-DD)</Text>
+          <Text style={cm.label}>Start Date (DD-MM-YYYY)</Text>
           <TextInput style={cm.input} value={startDate} onChangeText={setStartDate}
-            placeholder="2026-03-01" placeholderTextColor={C.textLight} />
+            placeholder="01-03-2026" placeholderTextColor={C.textLight} />
 
-          <Text style={cm.label}>End Date (YYYY-MM-DD)</Text>
+          <Text style={cm.label}>End Date (DD-MM-YYYY)</Text>
           <TextInput style={cm.input} value={endDate} onChangeText={setEndDate}
-            placeholder="2026-03-08" placeholderTextColor={C.textLight} />
+            placeholder="08-03-2026" placeholderTextColor={C.textLight} />
 
           <View style={cm.actions}>
             <Pressable onPress={onClose} style={cm.cancelBtn}>
@@ -290,60 +256,41 @@ function CreateChallengeModal({
   );
 }
 const cm = StyleSheet.create({
-  backdrop:      { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
-  card:          { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 24, paddingBottom: 40 },
-  title:         { fontSize: 20, fontWeight: "900", color: C.textDark, marginBottom: 18 },
-  label:         { fontSize: 11, fontWeight: "700", color: C.textLight, textTransform: "uppercase",
-    letterSpacing: 0.5, marginBottom: 6 },
-  input:         { backgroundColor: "#FFF5F7", borderRadius: 12, paddingVertical: 11,
-    paddingHorizontal: 14, fontSize: 15, color: C.textDark, borderWidth: 1.5,
-    borderColor: C.border, marginBottom: 14 },
-  typeRow:       { flexDirection: "row", gap: 10, marginBottom: 14 },
-  typePill:      { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: "#FFF5F7",
-    alignItems: "center", borderWidth: 1.5, borderColor: C.border },
+  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  card: { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  title: { fontSize: 20, fontWeight: "900", color: C.textDark, marginBottom: 18 },
+  label: { fontSize: 11, fontWeight: "700", color: C.textLight, textTransform: "uppercase",letterSpacing: 0.5, marginBottom: 6 },
+  input: { backgroundColor: "#FFF5F7", borderRadius: 12, paddingVertical: 11,paddingHorizontal: 14, fontSize: 15, color: C.textDark, borderWidth: 1.5,borderColor: C.border, marginBottom: 14 },
+  typeRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
+  typePill: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: C.pimp,alignItems: "center", borderWidth: 1.5, borderColor: C.border },
   typePillActive:{ backgroundColor: C.roseDark, borderColor: C.roseDark },
-  typeTxt:       { fontWeight: "700", fontSize: 13, color: C.textMid },
+  typeTxt: { fontWeight: "700", fontSize: 13, color: C.textMid },
   typeTxtActive: { color: C.white },
-  actions:       { flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 4 },
-  cancelBtn:     { paddingVertical: 12, paddingHorizontal: 18 },
-  cancelTxt:     { fontWeight: "700", color: C.textLight, fontSize: 15 },
-  createBtn:     { backgroundColor: C.roseDark, borderRadius: 14, paddingVertical: 12,
-    paddingHorizontal: 28 },
-  createTxt:     { color: C.white, fontWeight: "800", fontSize: 15 },
+  actions: { flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 4 },
+  cancelBtn: { paddingVertical: 12, paddingHorizontal: 18 },
+  cancelTxt: { fontWeight: "700", color: C.textLight, fontSize: 15 },
+  createBtn: { backgroundColor: C.roseDark, borderRadius: 14, paddingVertical: 12,paddingHorizontal: 28 },
+  createTxt: { color: C.white, fontWeight: "800", fontSize: 15 },
 });
 
-// ── Main Screen ───────────────────────────────────────────────────────────────
+// Main Screen 
 export default function LeaderboardScreen() {
-  const {
-    getGlobalLeaderboard,
-    getChallenges,
-    getMyChallenges,
-    getChallengeLeaderboard,
-    joinChallenge,
-    calculateAndApplyPoints,
-    getMyPoints,
-    createChallenge,
-    getInvites,
-    acceptInvite,
-  } = useCommunity();
-
-  const { getStepsDaily } = useHealth();
-
-  const [myUserId,     setMyUserId]     = useState("");
-  const [myPoints,     setMyPoints]     = useState(0);
-  const [globalBoard,  setGlobalBoard]  = useState<any[]>([]);
-  const [challenges,   setChallenges]   = useState<any[]>([]);
+  const {getGlobalLeaderboard, getChallenges,getMyChallenges,getChallengeLeaderboard,joinChallenge,
+    calculateAndApplyPoints,createChallenge,getInvites,acceptInvite,} = useCommunity();
+  const [myUserId, setMyUserId] = useState("");
+  const [myPoints, setMyPoints] = useState(0);
+  const [globalBoard, setGlobalBoard] = useState<any[]>([]);
+  const [challenges, setChallenges] = useState<any[]>([]);
   const [myChallenges, setMyChallenges] = useState<any[]>([]);
-  const [invites,      setInvites]      = useState<any[]>([]);
-  const [chalBoard,    setChalBoard]    = useState<any[]>([]);
-  const [selectedId,   setSelectedId]   = useState<string | null>(null);
-  const [joiningId,    setJoiningId]    = useState<string | null>(null);
-  const [tab,          setTab]          = useState<"ALL" | "MINE">("ALL");
-  const [createModal,  setCreateModal]  = useState(false);
-  const [loading,      setLoading]      = useState(true);
+  const [invites, setInvites] = useState<any[]>([]);
+  const [chalBoard, setChalBoard] = useState<any[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"ALL" | "MINE">("ALL");
+  const [createModal, setCreateModal]  = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // ── Load everything on mount ────────────────────────────────────────────
+  // ── Load everything 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -351,7 +298,7 @@ export default function LeaderboardScreen() {
         const user = await account.get();
         setMyUserId(user.$id);
 
-        const end   = new Date();
+        const end = new Date();
         const start = new Date();
         start.setDate(end.getDate() - 7);
 
@@ -380,7 +327,7 @@ export default function LeaderboardScreen() {
     load();
   }, []);
 
-  // ── Load challenge board when selection changes ─────────────────────────
+  //  Load challenge board when selection changes 
   useEffect(() => {
     if (!selectedId) return;
     getChallengeLeaderboard(selectedId).then(setChalBoard).catch(console.error);
@@ -450,7 +397,7 @@ export default function LeaderboardScreen() {
         </View>
       </View>
 
-      {/* ── Global leaderboard ── */}
+      {/* Global leaderboard */}
       <SectionCard title="Global Rankings (Last 7 Days)" emoji="🌍">
         {globalBoard.length === 0
           ? <Text style={styles.muted}>No step data yet this week</Text>
@@ -467,7 +414,7 @@ export default function LeaderboardScreen() {
         }
       </SectionCard>
 
-      {/* ── Invites ── */}
+      {/* Invites */}
       {invites.length > 0 && (
         <SectionCard title="Challenge Invites" emoji="📬">
           {invites.map((inv) => (
@@ -561,7 +508,7 @@ export default function LeaderboardScreen() {
         )}
       </SectionCard>
 
-      {/* ── Challenge leaderboard ── */}
+      {/* Challenge leaderboard */}
       {selectedId && (
         <SectionCard
           title={`${myChallenges.find((c) => c.$id === selectedId)?.title ?? "Challenge"} Rankings`}
@@ -595,45 +542,38 @@ export default function LeaderboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen:       { flex: 1, backgroundColor: C.bg },
-  scroll:       { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 48 },
-  loadingWrap:  { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: C.bg, gap: 12 },
-  loadingTxt:   { color: C.textMid, fontWeight: "600" },
+  screen: { flex: 1, backgroundColor: C.bg },
+  scroll: { paddingHorizontal: 18, paddingTop: 20, paddingBottom: 48 },
+  loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: C.bg, gap: 12 },
+  loadingTxt:{ color: C.textMid, fontWeight: "600" },
 
-  backBtn:  { marginBottom: 10, marginTop:60 },
-  backTxt:  { fontWeight: "700", color: C.textMid },
+  backBtn: { marginBottom: 10, marginTop:60 },
+  backTxt: { fontWeight: "700", color: C.textMid },
 
-  titleRow:      { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  title:         { fontSize: 26, fontWeight: "900", color: C.textDark },
-  subtitle:      { fontSize: 13, color: C.textLight, fontWeight: "600", marginTop: 2 },
-  myPointsPill:  { backgroundColor: C.blush, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10,
-    alignItems: "center", borderWidth: 1.5, borderColor: C.roseLight },
-  myPointsVal:   { fontSize: 22, fontWeight: "900", color: C.roseDark },
-  myPointsLbl:   { fontSize: 10, fontWeight: "700", color: C.rose },
+  titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  title: { fontSize: 26, fontWeight: "900", color: C.textDark },
+  subtitle: { fontSize: 13, color: C.textLight, fontWeight: "600", marginTop: 2 },
+  myPointsPill: { backgroundColor: C.blush, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10,alignItems: "center", borderWidth: 1.5, borderColor: C.roseLight },
+  myPointsVal: { fontSize: 22, fontWeight: "900", color: C.roseDark },
+  myPointsLbl: { fontSize: 10, fontWeight: "700", color: C.rose },
 
-  legendRow:   { flexDirection: "row", gap: 10, marginBottom: 16 },
-  legendItem:  { flex: 1, flexDirection: "row", alignItems: "center", gap: 6,
-    backgroundColor: C.white, borderRadius: 12, padding: 10,
-    borderWidth: 1, borderColor: C.border },
-  legendIcon:  { fontSize: 16 },
-  legendTxt:   { fontSize: 11, fontWeight: "700", color: C.textMid, flex: 1 },
+  legendRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  legendItem: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6,backgroundColor: C.white, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: C.border },
+  legendIcon: { fontSize: 16 },
+  legendTxt: { fontSize: 11, fontWeight: "700", color: C.textMid, flex: 1 },
 
   muted: { color: C.textLight, fontWeight: "600", fontSize: 13, textAlign: "center", paddingVertical: 8 },
 
-  inviteRow:  { flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F5EAED" },
-  inviteTxt:  { flex: 1, fontSize: 13, fontWeight: "600", color: C.textMid },
-  acceptBtn:  { backgroundColor: C.mint, paddingHorizontal: 14, paddingVertical: 7,
-    borderRadius: 10, borderWidth: 1, borderColor: C.mintDark },
-  acceptTxt:  { fontWeight: "800", color: C.mintDark, fontSize: 13 },
+  inviteRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between",paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
+  inviteTxt: { flex: 1, fontSize: 13, fontWeight: "600", color: C.textMid },
+  acceptBtn: { backgroundColor: C.mint, paddingHorizontal: 14, paddingVertical: 7,borderRadius: 10, borderWidth: 1, borderColor: C.mintDark },
+  acceptTxt: { fontWeight: "800", color: C.mintDark, fontSize: 13 },
 
-  tabRow:         { flexDirection: "row", gap: 8, marginBottom: 16, alignItems: "center" },
-  tabPill:        { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: "#FFF5F7",
-    alignItems: "center", borderWidth: 1.5, borderColor: C.border },
+  tabRow:{ flexDirection: "row", gap: 8, marginBottom: 16, alignItems: "center" },
+  tabPill:{ flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: C.cream ,alignItems: "center", borderWidth: 1.5, borderColor: C.border },
   tabPillActive:  { backgroundColor: C.textDark, borderColor: C.textDark },
-  tabTxt:         { fontSize: 12, fontWeight: "700", color: C.textMid },
-  tabTxtActive:   { color: C.white },
-  createBtn:      { backgroundColor: C.roseDark, borderRadius: 12, paddingHorizontal: 14,
-    paddingVertical: 8 },
-  createTxt:      { color: C.white, fontWeight: "800", fontSize: 12 },
+  tabTxt: { fontSize: 12, fontWeight: "700", color: C.textMid },
+  tabTxtActive: { color: C.white },
+  createBtn: { backgroundColor: C.roseDark, borderRadius: 12, paddingHorizontal: 14,paddingVertical: 8 },
+  createTxt:{ color: C.white, fontWeight: "800", fontSize: 12 },
 });

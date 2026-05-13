@@ -2,8 +2,6 @@ import { createContext, useContext } from 'react';
 import {ID, Query, Permission, Role } from 'react-native-appwrite';
 import { databases, account, DATABASE_ID, USER_PROFILE_COLLECTION_ID } from './appwrite';
 
-
-
 type ProfileContextType = {
     getUserProfile: () => Promise<any | null>;
     saveUserProfile: (params: { 
@@ -31,7 +29,7 @@ export function ProfileProvider({ children}: { children: React.ReactNode}) {
         weightGoalKg,
         dataSharing,
     }: {
-        heightCm: number;
+        heightCm:number;
         weightKg: number;
         weightGoalKg: number;
         dataSharing: boolean;
